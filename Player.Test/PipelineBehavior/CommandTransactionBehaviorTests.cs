@@ -16,7 +16,13 @@ public sealed class CommandTransactionBehaviorTests
         string databaseName = Guid.NewGuid().ToString();
         await using var dbContext = CreateInMemoryDbContext(databaseName);
         var behavior = new CommandTransactionBehavior<CreatePlayerCommand, Unit>(dbContext);
-        var player = new PlayerEntity { Id = Guid.NewGuid(), Name = "Committed" };
+        var player = new PlayerEntity
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Committed",
+            AccountStatus = "Active",
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
 
         var result = await behavior.Handle(
             new CreatePlayerCommand(player),
@@ -46,7 +52,13 @@ public sealed class CommandTransactionBehaviorTests
         string databaseName = Guid.NewGuid().ToString();
         await using var dbContext = CreateInMemoryDbContext(databaseName);
         var behavior = new CommandTransactionBehavior<CreatePlayerCommand, Unit>(dbContext);
-        var player = new PlayerEntity { Id = Guid.NewGuid(), Name = "Not committed" };
+        var player = new PlayerEntity
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = "Not committed",
+            AccountStatus = "Active",
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
 
         Func<Task> action = async () =>
             await behavior.Handle(
