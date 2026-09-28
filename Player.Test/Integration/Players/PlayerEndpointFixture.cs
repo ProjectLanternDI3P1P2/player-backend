@@ -1,3 +1,6 @@
+using Player.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace Player.Test.Integration.Players;
 
 public sealed class PlayerEndpointFixture : IAsyncLifetime
@@ -7,6 +10,17 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
 
     public HttpClient HttpClient =>
         factory?.CreateClient() ?? throw new InvalidOperationException("Fixture not initialized.");
+
+    public async Task SeedAsync(Func<PlayerDbContext, Task> seed)
+    {
+        if (factory is null)
+            throw new InvalidOperationException("Fixture not initialized.");
+
+        await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
+        PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
+        await seed(context);
+        await context.SaveChangesAsync();
+    }
 
     public async ValueTask InitializeAsync()
     {
