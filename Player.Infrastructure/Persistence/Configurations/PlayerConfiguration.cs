@@ -1,23 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PlayerEntity = global::Player.Domain.Entities.Player;
+using PlayerEntity = Player.Domain.Entities.Player;
 
 namespace Player.Infrastructure.Persistence.Configurations;
 
-public class PlayerConfiguration : IEntityTypeConfiguration<PlayerEntity>
+public sealed class PlayerConfiguration : IEntityTypeConfiguration<PlayerEntity>
 {
     public void Configure(EntityTypeBuilder<PlayerEntity> builder)
     {
-        builder.HasKey(p => p.Id);
-
-        builder.Property(p => p.Id).IsRequired().HasColumnName("PlayerId");
-
-        builder.Property(p => p.Name).IsRequired().HasMaxLength(100).HasColumnName("PlayerName");
-
-        builder.Property(p => p.Health).IsRequired().HasColumnName("PlayerHealth");
-
-        builder.Property(p => p.MaxHealth).IsRequired().HasColumnName("PlayerMaxHealth");
-
-        builder.Property(p => p.Attack).IsRequired().HasColumnName("PlayerAttack");
+        builder.ToTable("player");
+        builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(100);
+        builder.Property(x => x.AccountStatus).HasColumnName("account_status").HasMaxLength(32);
+        builder.Property(x => x.NewGamePlusLevel).HasColumnName("new_game_plus_level");
+        builder.Property(x => x.NewGamePlusUpdatedAt).HasColumnName("new_game_plus_updated_at");
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at");
+        builder.Property(x => x.AnonymizedAt).HasColumnName("anonymized_at");
     }
 }

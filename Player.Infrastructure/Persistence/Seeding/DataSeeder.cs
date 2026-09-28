@@ -1,6 +1,6 @@
-using Bogus;
 using Microsoft.EntityFrameworkCore;
-using PlayerEntity = global::Player.Domain.Entities.Player;
+using Player.Domain.Entities;
+using PlayerEntity = Player.Domain.Entities.Player;
 
 namespace Player.Infrastructure.Persistence.Seeding;
 
@@ -16,14 +16,20 @@ public static class DataSeeder
             return;
         }
 
-        var faker = new Faker<PlayerEntity>()
-            .RuleFor(player => player.Id, _ => Guid.NewGuid())
-            .RuleFor(player => player.Name, faker => faker.Name.FirstName())
-            .RuleFor(player => player.MaxHealth, faker => faker.Random.Int(100, 200))
-            .RuleFor(player => player.Health, (_, player) => player.MaxHealth)
-            .RuleFor(player => player.Attack, faker => faker.Random.Int(1, 20));
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        IReadOnlyList<HeroClass> heroClasses = PlayerFakeDataGenerator.CreateHeroClasses();
+        IReadOnlyList<Skill> skills = PlayerFakeDataGenerator.CreateSkills();
+        IReadOnlyList<PlayerEntity> players = PlayerFakeDataGenerator.CreatePlayers(now);
+        IReadOnlyList<Hero> heroes = PlayerFakeDataGenerator.CreateHeroes(
+            players,
+            heroClasses,
+            now
+        );
 
-        await context.Players.AddRangeAsync(faker.Generate(10), cancellationToken);
+        await context.HeroClasses.AddRangeAsync(heroClasses, cancellationToken);
+        await context.Skills.AddRangeAsync(skills, cancellationToken);
+        await context.Players.AddRangeAsync(players, cancellationToken);
+        await context.Heroes.AddRangeAsync(heroes, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 }
