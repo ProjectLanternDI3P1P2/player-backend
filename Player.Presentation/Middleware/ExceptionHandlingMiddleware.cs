@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Player.Domain.Exceptions;
 using ILogger = Serilog.ILogger;
 
 namespace Player.Presentation.Middleware;
@@ -22,6 +23,16 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
         {
             logger.Warning(exception, "Validation error occurred");
             await HandleValidationExceptionAsync(context, exception);
+        }
+        catch (BadRequestException exception)
+        {
+            logger.Warning(exception, "Bad request");
+            await HandleBadRequestExceptionAsync(context, exception);
+        }
+        catch (ConflictException exception)
+        {
+            logger.Warning(exception, "Conflict");
+            await HandleConflictExceptionAsync(context, exception);
         }
         catch (Exception exception)
         {
@@ -71,6 +82,37 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
         };
 
         context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails, context.RequestAborted);
+    }
+
+    private static async Task HandleBadRequestExceptionAsync(
+        HttpContext context,
+        BadRequestException exception
+    ) => await WriteProblemDetailsAsync(context, exception.Message, "Bad request", StatusCodes.Status400BadRequest);
+
+    private static async Task HandleConflictExceptionAsync(
+        HttpContext context,
+        ConflictException exception
+    ) => await WriteProblemDetailsAsync(context, exception.Message, "Conflict", StatusCodes.Status409Conflict);
+
+    private static async Task WriteProblemDetailsAsync(
+        HttpContext context,
+        string detail,
+        string title,
+        int status
+    )
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = $"https://httpstatuses.com/{status}",
+            Title = title,
+            Detail = detail,
+            Status = status,
+            Instance = context.Request.Path,
+        };
+
+        context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";
         await context.Response.WriteAsJsonAsync(problemDetails, context.RequestAborted);
     }

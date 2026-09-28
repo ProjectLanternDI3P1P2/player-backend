@@ -12,20 +12,35 @@ public static class PlayerFakeDataGenerator
             {
                 Code = "warrior",
                 Label = "Warrior",
-                BaseHealth = 120,
-                BaseMana = 30,
+                BaseHealth = 60,
+                BaseMana = 0,
+            },
+            new HeroClass
+            {
+                Code = "shaman",
+                Label = "Shaman",
+                BaseHealth = 50,
+                BaseMana = 0,
             },
             new HeroClass
             {
                 Code = "mage",
                 Label = "Mage",
-                BaseHealth = 80,
-                BaseMana = 120,
+                BaseHealth = 45,
+                BaseMana = 0,
             },
         ];
 
     public static IReadOnlyList<Skill> CreateSkills() =>
         [
+            new Skill
+            {
+                Code = "shaman-totem",
+                ClassCode = "shaman",
+                Label = "Totem",
+                RequiredLevel = 1,
+                TargetingType = "SingleEnemy",
+            },
             new Skill
             {
                 Code = "warrior-strike",
