@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Player.Contracts/Player.Contracts.csproj" />
+  <Project Path="Player.Application/Player.Application.csproj" />
+  <Project Path="Player.Domain/Player.Domain.csproj" />
+  <Project Path="Player.Infrastructure/Player.Infrastructure.csproj" />
+  <Project Path="Player.Test/Player.Test.csproj" Id="cd984a8a-40c0-41c1-a8df-cac3f3814504" />
+  <Project Path="Player.Presentation/Player.Presentation.csproj" />
+</Solution>
