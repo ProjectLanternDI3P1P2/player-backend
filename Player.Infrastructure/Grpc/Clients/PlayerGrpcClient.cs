@@ -1,9 +1,9 @@
+using Grpc.Core;
+using Microsoft.Extensions.Options;
 using Player.Application.Models;
 using Player.Application.Ports;
 using Player.Contracts.V1;
 using Player.Infrastructure.Grpc.Configuration;
-using Grpc.Core;
-using Microsoft.Extensions.Options;
 
 namespace Player.Infrastructure.Grpc.Clients;
 

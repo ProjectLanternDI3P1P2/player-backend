@@ -1,6 +1,6 @@
 using Bogus;
-using Player.Application.Features.PlayerUseCase.CreatePlayer;
 using FluentValidation.TestHelper;
+using Player.Application.Features.PlayerUseCase.CreatePlayer;
 
 namespace Player.Test.Features.PlayerUseCase.CreatePlayer;
 

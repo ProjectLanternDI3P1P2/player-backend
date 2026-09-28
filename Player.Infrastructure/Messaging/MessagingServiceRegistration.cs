@@ -1,7 +1,7 @@
-using Player.Application.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Player.Application.Messaging;
 
 namespace Player.Infrastructure.Messaging;
 

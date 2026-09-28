@@ -1,7 +1,7 @@
-using Player.Application.Messaging;
-using PlayerEntity = global::Player.Domain.Entities.Player;
-using Player.Domain.Repositories;
 using MediatR;
+using Player.Application.Messaging;
+using Player.Domain.Repositories;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Application.Features.PlayerUseCase.CreatePlayer;
 

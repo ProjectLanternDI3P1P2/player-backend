@@ -1,7 +1,7 @@
-using Player.Application.Features.PlayerUseCase.GetPlayerById;
-using Player.Contracts.V1;
 using Grpc.Core;
 using MediatR;
+using Player.Application.Features.PlayerUseCase.GetPlayerById;
+using Player.Contracts.V1;
 using ILogger = Serilog.ILogger;
 
 namespace Player.Presentation.Grpc.Services;

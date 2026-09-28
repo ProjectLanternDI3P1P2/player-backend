@@ -1,8 +1,8 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Player.Application.Features.PlayerUseCase.CreatePlayer;
 using Player.Application.Features.PlayerUseCase.GetPlayerById;
 using Player.Presentation.DTO;
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
 
 namespace Player.Presentation.Controllers;

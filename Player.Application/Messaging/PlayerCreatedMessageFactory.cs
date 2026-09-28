@@ -1,5 +1,5 @@
-using Player.Contracts.Events.V1;
 using Google.Protobuf;
+using Player.Contracts.Events.V1;
 
 namespace Player.Application.Messaging;
 

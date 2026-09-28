@@ -1,7 +1,7 @@
 using System.Reflection;
-using Player.Application.PipelineBehavior;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Player.Application.PipelineBehavior;
 
 namespace Player.Application;
 

@@ -1,7 +1,7 @@
-using Player.Application.Abstractions;
-using Player.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Player.Application.Abstractions;
+using Player.Infrastructure.Persistence;
 
 namespace Player.Infrastructure.PipelineBehavior;
 

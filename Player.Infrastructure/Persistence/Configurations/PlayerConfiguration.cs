@@ -1,6 +1,6 @@
-using PlayerEntity = global::Player.Domain.Entities.Player;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Infrastructure.Persistence.Configurations;
 

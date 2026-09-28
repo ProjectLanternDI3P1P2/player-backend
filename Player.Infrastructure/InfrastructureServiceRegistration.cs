@@ -1,15 +1,15 @@
-using Player.Domain.Services;
-using Player.Infrastructure.Grpc;
-using Player.Infrastructure.Messaging;
-using Player.Infrastructure.Persistence;
-using Player.Infrastructure.PipelineBehavior;
-using Player.Infrastructure.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Player.Domain.Services;
+using Player.Infrastructure.Grpc;
+using Player.Infrastructure.Messaging;
+using Player.Infrastructure.Persistence;
+using Player.Infrastructure.PipelineBehavior;
+using Player.Infrastructure.Services;
 
 namespace Player.Infrastructure;
 

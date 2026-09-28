@@ -1,5 +1,5 @@
-using PlayerEntity = global::Player.Domain.Entities.Player;
 using Microsoft.EntityFrameworkCore;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Infrastructure.Persistence;
 

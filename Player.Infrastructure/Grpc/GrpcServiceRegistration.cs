@@ -1,9 +1,9 @@
-using Player.Contracts.V1;
-using Player.Infrastructure.Grpc.Clients;
-using Player.Infrastructure.Grpc.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Player.Contracts.V1;
+using Player.Infrastructure.Grpc.Clients;
+using Player.Infrastructure.Grpc.Configuration;
 
 namespace Player.Infrastructure.Grpc;
 

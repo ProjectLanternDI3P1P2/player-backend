@@ -1,5 +1,5 @@
-using PlayerEntity = global::Player.Domain.Entities.Player;
 using Player.Domain.Repositories;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Infrastructure.Persistence.Repositories;
 

@@ -1,6 +1,6 @@
-using Player.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Player.Infrastructure.Persistence;
 using Respawn;
 
 namespace Player.Test.Integration;

@@ -1,8 +1,8 @@
-using Player.Application.Messaging;
-using Player.Contracts.Events.V1;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Player.Application.Messaging;
+using Player.Contracts.Events.V1;
 using RabbitMQ.Client;
 
 namespace Player.Infrastructure.Messaging;

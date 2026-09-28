@@ -1,10 +1,10 @@
-using Player.Application.Abstractions;
-using PlayerEntity = global::Player.Domain.Entities.Player;
-using Player.Infrastructure.Persistence;
-using Player.Infrastructure.PipelineBehavior;
 using FluentAssertions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Player.Application.Abstractions;
+using Player.Infrastructure.Persistence;
+using Player.Infrastructure.PipelineBehavior;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Test.PipelineBehavior;
 

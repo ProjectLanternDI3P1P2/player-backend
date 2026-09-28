@@ -1,9 +1,9 @@
 using Bogus;
-using Player.Application.Features.PlayerUseCase.GetPlayerById;
-using PlayerEntity = global::Player.Domain.Entities.Player;
-using Player.Domain.Repositories;
 using FluentAssertions;
 using Moq;
+using Player.Application.Features.PlayerUseCase.GetPlayerById;
+using Player.Domain.Repositories;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Test.Features.PlayerUseCase.GetPlayerById;
 

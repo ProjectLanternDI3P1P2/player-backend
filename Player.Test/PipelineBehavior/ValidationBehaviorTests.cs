@@ -1,9 +1,9 @@
-using Player.Application.PipelineBehavior;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
 using Moq;
+using Player.Application.PipelineBehavior;
 
 namespace Player.Test.PipelineBehavior;
 

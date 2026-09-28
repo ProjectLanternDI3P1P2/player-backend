@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using Player.Presentation.DTO;
 using FluentAssertions;
+using Player.Presentation.DTO;
 
 namespace Player.Test.Integration.Players;
 

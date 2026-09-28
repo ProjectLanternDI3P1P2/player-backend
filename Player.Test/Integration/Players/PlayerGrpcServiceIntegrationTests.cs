@@ -1,10 +1,10 @@
-using Player.Contracts.V1;
-using PlayerEntity = global::Player.Domain.Entities.Player;
-using Player.Infrastructure.Persistence;
 using FluentAssertions;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Player.Contracts.V1;
+using Player.Infrastructure.Persistence;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Test.Integration.Players;
 

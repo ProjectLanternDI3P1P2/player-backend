@@ -1,9 +1,9 @@
 using Bogus;
-using PlayerEntity = global::Player.Domain.Entities.Player;
-using Player.Infrastructure.Persistence;
-using Player.Infrastructure.Persistence.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Player.Infrastructure.Persistence;
+using Player.Infrastructure.Persistence.Repositories;
+using PlayerEntity = global::Player.Domain.Entities.Player;
 
 namespace Player.Test.Persistence.Repositories;
 
