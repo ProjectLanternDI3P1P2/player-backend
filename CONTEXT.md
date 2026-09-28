@@ -1,12 +1,8 @@
-# Backend Service Template
+# Player Backend Context
 
-The reference shape of a backend microservice for this project: a .NET Clean
+The vocabulary and conventions used by the Player microservice: a .NET Clean
 Architecture solution, the CI pipeline that guards it, and the branching flow
-that releases it. Every service repository starts from this one.
-
-There is no shared backend library, so this template is the only mechanism by
-which the five services share standards. What is written here is what they have
-in common.
+that releases it.
 
 ## Language
 

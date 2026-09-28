@@ -26,13 +26,13 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: combat_test
-          POSTGRES_USER: combat
+          POSTGRES_DB: player_test
+          POSTGRES_USER: player
           POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U combat -d combat_test"
+          --health-cmd "pg_isready -U player -d player_test"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -73,7 +73,7 @@ jobs:
       - name: Build, test and analyse
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          COMBAT_TEST_DATABASE_CONNECTION: Host=localhost;Port=5432;Database=combat_test;Username=combat
+          PLAYER_TEST_DATABASE_CONNECTION: Host=localhost;Port=5432;Database=player_test;Username=player
         run: |
           dotnet dotnet-sonarscanner begin \
             /k:"ProjectLanternDI3P1P2_player-backend" \
@@ -81,9 +81,9 @@ jobs:
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
-          dotnet build Combat.Presentation.slnx --no-incremental
+          dotnet build Player.Presentation.slnx --no-incremental
           # Sonar does not read Cobertura for C#; dotnet-coverage's xml format is the
           # vscoveragexml one it expects.
-          dotnet dotnet-coverage collect "dotnet test --solution Combat.Presentation.slnx" \
+          dotnet dotnet-coverage collect "dotnet test --solution Player.Presentation.slnx" \
             -f xml -o coverage.xml
           dotnet dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"

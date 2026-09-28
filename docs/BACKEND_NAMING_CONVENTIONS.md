@@ -10,15 +10,15 @@ Follow standard .NET naming conventions and the repository `.editorconfig`.
 
 | Element | Convention | Example |
 |---|---|---|
-| Namespace | PascalCase | `Combat.Application.Features.CreateCombat` |
-| Class | PascalCase | `CombatRepository` |
-| Record | PascalCase | `CreateCombatCommand` |
-| Interface | `I` + PascalCase | `ICombatRepository` |
+| Namespace | PascalCase | `Player.Application.Features.CreatePlayer` |
+| Class | PascalCase | `PlayerRepository` |
+| Record | PascalCase | `CreatePlayerCommand` |
+| Interface | `I` + PascalCase | `IPlayerRepository` |
 | Method | PascalCase | `GetByIdAsync` |
-| Property | PascalCase | `CombatId` |
-| Private field | `_camelCase` | `_combatRepository` |
-| Parameter | camelCase | `combatId` |
-| Local variable | camelCase | `activeCombat` |
+| Property | PascalCase | `PlayerId` |
+| Private field | `_camelCase` | `_playerRepository` |
+| Parameter | camelCase | `playerId` |
+| Local variable | camelCase | `activePlayer` |
 | Constant | PascalCase | `MaximumPartySize` |
 
 Treat abbreviations as normal words:
@@ -51,7 +51,7 @@ Examples:
 ```text
 PlayerId
 DungeonId
-CombatId
+PlayerId
 RewardId
 ItemId
 SessionId
@@ -144,7 +144,7 @@ Use domain verbs when they add meaning:
 
 ```text
 StartDungeonAsync
-CompleteCombatAsync
+CompletePlayerAsync
 EquipItemAsync
 GrantRewardAsync
 ```
@@ -189,7 +189,7 @@ Prefer:
 CreatePlayerRequest
 PlayerDto
 DungeonDto
-CombatDto
+PlayerDto
 ```
 
 Avoid vague names such as:
@@ -213,7 +213,7 @@ Examples:
 ```text
 PlayerConfiguration
 DungeonConfiguration
-CombatConfiguration
+PlayerConfiguration
 ```
 
 ## Message naming
@@ -223,7 +223,7 @@ Events describe something that already happened and use past tense.
 ```text
 PlayerCreated
 DungeonStarted
-CombatCompleted
+PlayerCompleted
 RewardGranted
 ItemEquipped
 ProgressionUpdated
@@ -253,7 +253,7 @@ Logical message destinations use lowercase kebab-case:
 Examples:
 
 ```text
-combat.combat-completed.v1
+player.player-completed.v1
 rewards.reward-granted.v1
 dungeon.dungeon-started.v1
 ```
