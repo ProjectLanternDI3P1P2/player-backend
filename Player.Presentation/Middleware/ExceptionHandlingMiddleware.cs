@@ -89,12 +89,24 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
     private static async Task HandleBadRequestExceptionAsync(
         HttpContext context,
         BadRequestException exception
-    ) => await WriteProblemDetailsAsync(context, exception.Message, "Bad request", StatusCodes.Status400BadRequest);
+    ) =>
+        await WriteProblemDetailsAsync(
+            context,
+            exception.Message,
+            "Bad request",
+            StatusCodes.Status400BadRequest
+        );
 
     private static async Task HandleConflictExceptionAsync(
         HttpContext context,
         ConflictException exception
-    ) => await WriteProblemDetailsAsync(context, exception.Message, "Conflict", StatusCodes.Status409Conflict);
+    ) =>
+        await WriteProblemDetailsAsync(
+            context,
+            exception.Message,
+            "Conflict",
+            StatusCodes.Status409Conflict
+        );
 
     private static async Task WriteProblemDetailsAsync(
         HttpContext context,

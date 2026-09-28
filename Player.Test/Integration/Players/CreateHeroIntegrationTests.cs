@@ -30,15 +30,25 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
 
         created.StatusCode.Should().Be(HttpStatusCode.Created);
         replayed.StatusCode.Should().Be(HttpStatusCode.OK);
-        CreateHeroResponse? createdHero = await created.Content.ReadFromJsonAsync<CreateHeroResponse>(
-            TestContext.Current.CancellationToken
-        );
-        CreateHeroResponse? replayedHero = await replayed.Content.ReadFromJsonAsync<CreateHeroResponse>(
-            TestContext.Current.CancellationToken
-        );
-        createdHero.Should().BeEquivalentTo(
-            new { Name = "Merlin", ClassCode = "mage", Level = 1, MaximumHealth = 45 }
-        );
+        CreateHeroResponse? createdHero =
+            await created.Content.ReadFromJsonAsync<CreateHeroResponse>(
+                TestContext.Current.CancellationToken
+            );
+        CreateHeroResponse? replayedHero =
+            await replayed.Content.ReadFromJsonAsync<CreateHeroResponse>(
+                TestContext.Current.CancellationToken
+            );
+        createdHero
+            .Should()
+            .BeEquivalentTo(
+                new
+                {
+                    Name = "Merlin",
+                    ClassCode = "mage",
+                    Level = 1,
+                    MaximumHealth = 45,
+                }
+            );
         createdHero!.UnlockedSkillCodes.Should().ContainSingle().Which.Should().Be("mage-bolt");
         replayedHero!.Id.Should().Be(createdHero.Id);
         replayedHero.AlreadyExists.Should().BeTrue();
@@ -57,10 +67,20 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         duplicateName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         invalidName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        foreach (string name in new[]
-                 {
-                     "Aldric", "Brom", "Celia", "Doran", "Elora", "Faron", "Galen", "Helia", "Iris",
-                 })
+        foreach (
+            string name in new[]
+            {
+                "Aldric",
+                "Brom",
+                "Celia",
+                "Doran",
+                "Elora",
+                "Faron",
+                "Galen",
+                "Helia",
+                "Iris",
+            }
+        )
         {
             HttpResponseMessage response = await fixture.HttpClient.PostAsJsonAsync(
                 $"/api/v1/players/{playerId}/heroes",
@@ -89,7 +109,14 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
                 CreatedAt = DateTimeOffset.UtcNow,
             }
         );
-        context.HeroClasses.Add(new HeroClass { Code = "mage", Label = "Mage", BaseHealth = 45 });
+        context.HeroClasses.Add(
+            new HeroClass
+            {
+                Code = "mage",
+                Label = "Mage",
+                BaseHealth = 45,
+            }
+        );
         context.Skills.Add(
             new Skill
             {

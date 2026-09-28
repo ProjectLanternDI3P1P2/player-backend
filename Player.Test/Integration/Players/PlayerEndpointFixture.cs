@@ -1,5 +1,5 @@
-using Player.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
+using Player.Infrastructure.Persistence;
 
 namespace Player.Test.Integration.Players;
 

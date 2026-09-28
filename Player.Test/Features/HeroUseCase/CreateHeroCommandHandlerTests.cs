@@ -23,17 +23,19 @@ public sealed class CreateHeroCommandHandlerTests
             TestContext.Current.CancellationToken
         );
 
-        result.Should().BeEquivalentTo(
-            new
-            {
-                Name = "Merlin",
-                ClassCode = "mage",
-                Level = 1,
-                MaximumHealth = 45,
-                UnlockedSkillCodes = new[] { "mage-bolt" },
-                AlreadyExists = false,
-            }
-        );
+        result
+            .Should()
+            .BeEquivalentTo(
+                new
+                {
+                    Name = "Merlin",
+                    ClassCode = "mage",
+                    Level = 1,
+                    MaximumHealth = 45,
+                    UnlockedSkillCodes = new[] { "mage-bolt" },
+                    AlreadyExists = false,
+                }
+            );
         repository.Verify(x => x.AddHero(It.Is<Hero>(hero => hero.Endurance == 0)), Times.Once);
         repository.Verify(x => x.AddIdempotencyKey(It.IsAny<IdempotencyKey>()), Times.Once);
     }
@@ -68,10 +70,11 @@ public sealed class CreateHeroCommandHandlerTests
         var repository = CreateRepository(playerId, "warrior", 60, "warrior-strike", heroCount: 10);
         var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
 
-        Func<Task> action = () => handler.Handle(
-            new CreateHeroCommand(playerId, "Conan", "warrior", Guid.NewGuid()),
-            TestContext.Current.CancellationToken
-        );
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateHeroCommand(playerId, "Conan", "warrior", Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
 
         await action.Should().ThrowAsync<ConflictException>();
         repository.Verify(x => x.AddHero(It.IsAny<Hero>()), Times.Never);
@@ -81,13 +84,20 @@ public sealed class CreateHeroCommandHandlerTests
     public async Task Handle_DuplicateName_RejectsCreation()
     {
         Guid playerId = Guid.NewGuid();
-        var repository = CreateRepository(playerId, "warrior", 60, "warrior-strike", nameExists: true);
+        var repository = CreateRepository(
+            playerId,
+            "warrior",
+            60,
+            "warrior-strike",
+            nameExists: true
+        );
         var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
 
-        Func<Task> action = () => handler.Handle(
-            new CreateHeroCommand(playerId, "Conan", "warrior", Guid.NewGuid()),
-            TestContext.Current.CancellationToken
-        );
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateHeroCommand(playerId, "Conan", "warrior", Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
 
         await action.Should().ThrowAsync<BadRequestException>();
     }
@@ -97,10 +107,11 @@ public sealed class CreateHeroCommandHandlerTests
     {
         var handler = new CreateHeroCommandHandler(Mock.Of<IHeroRepository>(), new FixedClock());
 
-        Func<Task> action = () => handler.Handle(
-            new CreateHeroCommand(Guid.NewGuid(), "12", "mage", Guid.NewGuid()),
-            TestContext.Current.CancellationToken
-        );
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateHeroCommand(Guid.NewGuid(), "12", "mage", Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
 
         await action.Should().ThrowAsync<BadRequestException>();
     }
@@ -170,14 +181,23 @@ public sealed class CreateHeroCommandHandlerTests
             .Setup(x => x.CountActiveHeroesAsync(playerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(heroCount);
         repository
-            .Setup(x => x.HeroNameExistsAsync(playerId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x =>
+                x.HeroNameExistsAsync(playerId, It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
             .ReturnsAsync(nameExists);
         repository
             .Setup(x => x.GetHeroClassAsync(classCode, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HeroClass { Code = classCode, BaseHealth = baseHealth });
         repository
             .Setup(x => x.GetFirstSkillAsync(classCode, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Skill { Code = skillCode, ClassCode = classCode, RequiredLevel = 1 });
+            .ReturnsAsync(
+                new Skill
+                {
+                    Code = skillCode,
+                    ClassCode = classCode,
+                    RequiredLevel = 1,
+                }
+            );
         return repository;
     }
 

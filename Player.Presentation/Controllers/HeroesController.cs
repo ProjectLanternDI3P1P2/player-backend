@@ -17,7 +17,12 @@ public sealed class HeroesController(ISender sender) : ControllerBase
     )
     {
         CreateHeroResult result = await sender.Send<CreateHeroResult>(
-            new CreateHeroCommand(playerId, request.Name, request.ClassCode, request.IdempotencyKey),
+            new CreateHeroCommand(
+                playerId,
+                request.Name,
+                request.ClassCode,
+                request.IdempotencyKey
+            ),
             cancellationToken
         );
 

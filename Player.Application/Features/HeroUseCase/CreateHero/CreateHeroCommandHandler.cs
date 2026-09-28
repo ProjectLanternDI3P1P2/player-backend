@@ -15,7 +15,10 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
     private const string Scope = "hero.create";
     private const int MaximumHeroesPerPlayer = 10;
 
-    public async Task<CreateHeroResult> Handle(CreateHeroCommand request, CancellationToken cancellationToken)
+    public async Task<CreateHeroResult> Handle(
+        CreateHeroCommand request,
+        CancellationToken cancellationToken
+    )
     {
         string name = NormalizeName(request.Name);
         string classCode = request.ClassCode.Trim().ToLowerInvariant();
@@ -27,22 +30,41 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
         );
         if (existing is not null)
         {
-            return await GetIdempotentResultAsync(existing, request.PlayerId, fingerprint, cancellationToken);
+            return await GetIdempotentResultAsync(
+                existing,
+                request.PlayerId,
+                fingerprint,
+                cancellationToken
+            );
         }
 
-        PlayerEntity? player = await repository.GetPlayerForUpdateAsync(request.PlayerId, cancellationToken);
+        PlayerEntity? player = await repository.GetPlayerForUpdateAsync(
+            request.PlayerId,
+            cancellationToken
+        );
         if (player is null)
         {
             throw new KeyNotFoundException($"Player '{request.PlayerId}' was not found.");
         }
 
-        existing = await repository.GetIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+        existing = await repository.GetIdempotencyKeyAsync(
+            request.IdempotencyKey,
+            cancellationToken
+        );
         if (existing is not null)
         {
-            return await GetIdempotentResultAsync(existing, request.PlayerId, fingerprint, cancellationToken);
+            return await GetIdempotentResultAsync(
+                existing,
+                request.PlayerId,
+                fingerprint,
+                cancellationToken
+            );
         }
 
-        if (await repository.CountActiveHeroesAsync(request.PlayerId, cancellationToken) >= MaximumHeroesPerPlayer)
+        if (
+            await repository.CountActiveHeroesAsync(request.PlayerId, cancellationToken)
+            >= MaximumHeroesPerPlayer
+        )
         {
             throw new ConflictException("A player cannot own more than 10 active heroes.");
         }
@@ -61,7 +83,9 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
         Skill? firstSkill = await repository.GetFirstSkillAsync(classCode, cancellationToken);
         if (firstSkill is null)
         {
-            throw new InvalidOperationException($"Hero class '{classCode}' has no level 1 skill configured.");
+            throw new InvalidOperationException(
+                $"Hero class '{classCode}' has no level 1 skill configured."
+            );
         }
 
         DateTimeOffset now = clock.UtcNow;
@@ -75,24 +99,28 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
             Level = 1,
             CreatedAt = now,
         };
-        hero.HeroSkills.Add(new HeroSkill
-        {
-            HeroId = hero.Id,
-            SkillCode = firstSkill.Code,
-            Skill = firstSkill,
-            UnlockedAt = now,
-            IsActive = true,
-        });
+        hero.HeroSkills.Add(
+            new HeroSkill
+            {
+                HeroId = hero.Id,
+                SkillCode = firstSkill.Code,
+                Skill = firstSkill,
+                UnlockedAt = now,
+                IsActive = true,
+            }
+        );
         repository.AddHero(hero);
-        repository.AddIdempotencyKey(new IdempotencyKey
-        {
-            Key = request.IdempotencyKey,
-            PlayerId = request.PlayerId,
-            Scope = Scope,
-            RequestFingerprint = fingerprint,
-            ProducedResourceId = hero.Id,
-            ExpiresAt = now.AddDays(1),
-        });
+        repository.AddIdempotencyKey(
+            new IdempotencyKey
+            {
+                Key = request.IdempotencyKey,
+                PlayerId = request.PlayerId,
+                Scope = Scope,
+                RequestFingerprint = fingerprint,
+                ProducedResourceId = hero.Id,
+                ExpiresAt = now.AddDays(1),
+            }
+        );
 
         return ToResult(hero, false);
     }
@@ -104,16 +132,28 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
         CancellationToken cancellationToken
     )
     {
-        if (key.PlayerId != playerId || key.Scope != Scope || key.RequestFingerprint != fingerprint || key.ProducedResourceId is null)
+        if (
+            key.PlayerId != playerId
+            || key.Scope != Scope
+            || key.RequestFingerprint != fingerprint
+            || key.ProducedResourceId is null
+        )
         {
-            throw new ConflictException("This idempotency key was already used for a different request.");
+            throw new ConflictException(
+                "This idempotency key was already used for a different request."
+            );
         }
 
         // The resource ID is recorded only after the command has built the hero, so this lookup is safe.
-        Hero? hero = await repository.GetHeroByIdAsync(key.ProducedResourceId.Value, cancellationToken);
+        Hero? hero = await repository.GetHeroByIdAsync(
+            key.ProducedResourceId.Value,
+            cancellationToken
+        );
         if (hero is null)
         {
-            throw new InvalidOperationException("The idempotent hero creation result is no longer available.");
+            throw new InvalidOperationException(
+                "The idempotent hero creation result is no longer available."
+            );
         }
 
         return ToResult(hero, true);
@@ -136,7 +176,9 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
         if (
             normalized.Length is < 3 or > 24
             || !char.IsLetter(normalized[0])
-            || normalized.Any(character => !char.IsLetter(character) && character is not (' ' or '-' or '\''))
+            || normalized.Any(character =>
+                !char.IsLetter(character) && character is not (' ' or '-' or '\'')
+            )
         )
         {
             throw new BadRequestException(
