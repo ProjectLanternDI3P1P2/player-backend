@@ -5,6 +5,10 @@ namespace Player.Domain.Repositories;
 
 public interface IHeroRepository
 {
+    Task<IReadOnlyList<Hero>> ListActiveByPlayerIdAsync(
+        Guid playerId,
+        CancellationToken cancellationToken
+    );
     Task<IdempotencyKey?> GetIdempotencyKeyAsync(Guid key, CancellationToken cancellationToken);
     Task<Hero?> GetHeroByIdAsync(Guid heroId, CancellationToken cancellationToken);
     Task<PlayerEntity?> GetPlayerForUpdateAsync(Guid playerId, CancellationToken cancellationToken);
