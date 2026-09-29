@@ -30,7 +30,7 @@ public static class InfrastructureServiceRegistration
             .AddTransient(typeof(IPipelineBehavior<,>), typeof(CommandTransactionBehavior<,>))
             .AddEfConnection()
             .AddRepositories()
-            .AddGrpcConfiguration()
+            .AddGrpcConfiguration(configuration)
             .AddMessaging(configuration);
     }
 
