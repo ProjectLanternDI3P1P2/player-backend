@@ -26,7 +26,8 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                 hero.HeroClass.BaseHealth + (hero.Endurance * 6),
                 hero.SessionMembers.Any(member =>
                     member.LeftAt is null && member.GameSession.EndedAt is null
-                )
+                ),
+                hero.CreatedAt
             ))
             .ToList();
     }
