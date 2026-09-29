@@ -33,6 +33,19 @@ public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
             .Include(x => x.HeroSkills)
             .SingleOrDefaultAsync(x => x.Id == heroId, cancellationToken);
 
+    public Task<Hero?> GetActiveByIdAndPlayerIdAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    ) =>
+        dbContext
+            .Heroes.AsNoTracking()
+            .Include(x => x.HeroClass)
+            .Include(x => x.HeroSkills)
+                .ThenInclude(x => x.Skill)
+            .Where(x => x.Id == heroId && x.PlayerId == playerId && !x.IsDeleted)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<PlayerEntity?> GetPlayerForUpdateAsync(
         Guid playerId,
         CancellationToken cancellationToken

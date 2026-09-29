@@ -11,6 +11,11 @@ public interface IHeroRepository
     );
     Task<IdempotencyKey?> GetIdempotencyKeyAsync(Guid key, CancellationToken cancellationToken);
     Task<Hero?> GetHeroByIdAsync(Guid heroId, CancellationToken cancellationToken);
+    Task<Hero?> GetActiveByIdAndPlayerIdAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    );
     Task<PlayerEntity?> GetPlayerForUpdateAsync(Guid playerId, CancellationToken cancellationToken);
     Task<HeroClass?> GetHeroClassAsync(string classCode, CancellationToken cancellationToken);
     Task<Skill?> GetFirstSkillAsync(string classCode, CancellationToken cancellationToken);
