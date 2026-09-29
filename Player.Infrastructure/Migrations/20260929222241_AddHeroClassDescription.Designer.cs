@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Player.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Player.Infrastructure.Persistence;
 namespace Player.Infrastructure.Migrations
 {
     [DbContext(typeof(PlayerDbContext))]
-    partial class PlayerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260929222241_AddHeroClassDescription")]
+    partial class AddHeroClassDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

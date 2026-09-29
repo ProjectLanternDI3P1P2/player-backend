@@ -12,6 +12,7 @@ public static class PlayerFakeDataGenerator
             {
                 Code = "warrior",
                 Label = "Warrior",
+                Description = "Front-line fighter. Takes the hits and protects the team.",
                 BaseHealth = 60,
                 BaseMana = 0,
             },
@@ -19,6 +20,7 @@ public static class PlayerFakeDataGenerator
             {
                 Code = "shaman",
                 Label = "Shaman",
+                Description = "Spirit wielder. Uses totems and resilience to support the party.",
                 BaseHealth = 50,
                 BaseMana = 0,
             },
@@ -26,6 +28,7 @@ public static class PlayerFakeDataGenerator
             {
                 Code = "mage",
                 Label = "Mage",
+                Description = "Master of the arcane. Ranged area damage, but fragile.",
                 BaseHealth = 45,
                 BaseMana = 0,
             },

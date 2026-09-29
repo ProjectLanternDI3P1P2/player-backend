@@ -65,7 +65,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         );
 
         duplicateName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        invalidName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        invalidName.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
         foreach (
             string name in new[]

@@ -5,6 +5,7 @@ namespace Player.Domain.Repositories;
 
 public interface IHeroRepository
 {
+    Task<IReadOnlyList<HeroClass>> ListHeroClassesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Hero>> ListActiveByPlayerIdAsync(
         Guid playerId,
         CancellationToken cancellationToken
