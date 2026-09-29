@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Player.Application.Ports;
 using Player.Infrastructure.Persistence;
 
 namespace Player.Test.Integration.Players;
@@ -20,6 +21,21 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
         await seed(context);
         await context.SaveChangesAsync();
+    }
+
+    public void SetDungeonClient(IDungeonClient client)
+    {
+        factory?.SetDungeonClient(client);
+    }
+
+    public async Task AssertAsync(Action<PlayerDbContext> assertion)
+    {
+        if (factory is null)
+            throw new InvalidOperationException("Fixture not initialized.");
+
+        await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
+        PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
+        assertion(context);
     }
 
     public async ValueTask InitializeAsync()
