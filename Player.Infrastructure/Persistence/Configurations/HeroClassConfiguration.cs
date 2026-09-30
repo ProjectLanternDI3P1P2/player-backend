@@ -12,6 +12,7 @@ public sealed class HeroClassConfiguration : IEntityTypeConfiguration<HeroClass>
         builder.HasKey(x => x.Code);
         builder.Property(x => x.Code).HasColumnName("code").HasMaxLength(50);
         builder.Property(x => x.Label).HasColumnName("label").HasMaxLength(100);
+        builder.Property(x => x.Description).HasColumnName("description").HasMaxLength(240);
         builder.Property(x => x.BaseHealth).HasColumnName("base_health");
         builder.Property(x => x.BaseMana).HasColumnName("base_mana");
     }

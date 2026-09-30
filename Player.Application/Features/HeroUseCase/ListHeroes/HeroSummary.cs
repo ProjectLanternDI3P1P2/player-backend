@@ -6,5 +6,6 @@ public sealed record HeroSummary(
     string ClassCode,
     int Level,
     int MaximumHealth,
-    bool IsEngagedInActiveSession
+    bool IsEngagedInActiveSession,
+    bool IsSelected
 );

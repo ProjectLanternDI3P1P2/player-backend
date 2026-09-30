@@ -27,6 +27,7 @@ public sealed class GetHeroSheetQueryHandler(IHeroRepository repository)
             hero.Name,
             hero.ClassCode,
             hero.Level,
+            hero.CreatedAt,
             new HeroAttributes(hero.Strength, hero.Endurance, hero.Agility, hero.Intelligence),
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
             hero.HeroSkills.OrderBy(skill => skill.SkillCode)

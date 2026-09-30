@@ -166,6 +166,7 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
             hero.ClassCode,
             hero.Level,
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
+            hero.CreatedAt,
             hero.HeroSkills.Where(x => x.IsActive).Select(x => x.SkillCode).ToList(),
             alreadyExists
         );
