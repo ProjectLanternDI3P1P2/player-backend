@@ -29,6 +29,7 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
                 {
                     ["ConnectionStrings:DefaultConnection"] = connectionString,
                     ["RabbitMq:Enabled"] = "false",
+                    ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
                 }
             )
         );

@@ -1,3 +1,4 @@
+using Player.Presentation.Hubs;
 using Player.Presentation.Middleware;
 using Scalar.AspNetCore;
 
@@ -8,6 +9,7 @@ public static class ApplicationExtension
     public static WebApplication ConfigureStart(this WebApplication app)
     {
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseCors(BuilderExtension.GameClientCorsPolicy);
 
         if (!app.Environment.IsDevelopment())
         {
@@ -15,6 +17,7 @@ public static class ApplicationExtension
         }
 
         app.MapControllers();
+        app.MapHub<PlayerHub>("/hubs/player");
         app.MapGrpcServices();
         app.MapHealthChecks("/health/live");
         app.MapHealthChecks("/health/ready");
