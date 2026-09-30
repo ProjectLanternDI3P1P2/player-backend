@@ -38,9 +38,32 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
         heroes.Should().ContainSingle().Which.IsSelected.Should().BeTrue();
     }
 
-    private static Task SeedAsync(PlayerDbContext context, Guid playerId, Guid heroId)
+    [Fact]
+    public async Task Deselect_SelectedActiveOwnedHero_ClearsTheSelection()
     {
-        const string classCode = "selection-test-class";
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId, isSelected: true));
+
+        HttpResponseMessage response = await fixture.HttpClient.DeleteAsync(
+            $"/api/v1/players/{playerId}/heroes/{heroId}/selection",
+            TestContext.Current.CancellationToken
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await fixture.AssertAsync(context =>
+            context.Players.Single(player => player.Id == playerId).SelectedHeroId.Should().BeNull()
+        );
+    }
+
+    private static async Task SeedAsync(
+        PlayerDbContext context,
+        Guid playerId,
+        Guid heroId,
+        bool isSelected = false
+    )
+    {
+        string classCode = $"selection-test-{playerId:N}";
         context.AddRange(
             new PlayerEntity
             {
@@ -64,7 +87,10 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
                 CreatedAt = DateTimeOffset.UtcNow,
             }
         );
-        return Task.CompletedTask;
+        await context.SaveChangesAsync();
+
+        if (isSelected)
+            context.Players.Single(player => player.Id == playerId).SelectedHeroId = heroId;
     }
 
     private sealed record HeroResponse(bool IsSelected);
