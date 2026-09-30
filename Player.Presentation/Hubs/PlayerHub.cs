@@ -8,7 +8,7 @@ namespace Player.Presentation.Hubs;
 /// Gameplay boundary owned by Player. A client never supplies a SignalR group:
 /// the server adds it to the session group only after the command succeeds.
 /// </summary>
-public sealed class PlayerHub(ISender sender) : Hub
+public sealed class PlayerHub(ISender sender) : HubBase
 {
     public async Task<SessionCommandAcknowledgement> CreateSession(CreateSoloSessionCommand command)
     {
@@ -19,10 +19,7 @@ public sealed class PlayerHub(ISender sender) : Hub
         SessionStateChanged state = SessionStateChanged.From(result);
         string groupName = GetSessionGroupName(result.SessionId);
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName, Context.ConnectionAborted);
-        await Clients
-            .Group(groupName)
-            .SendAsync(nameof(SessionStateChanged), state, Context.ConnectionAborted);
+        await AddCallerToGroupAndBroadcastAsync(groupName, nameof(SessionStateChanged), state);
 
         return SessionCommandAcknowledgement.Approve(state);
     }
