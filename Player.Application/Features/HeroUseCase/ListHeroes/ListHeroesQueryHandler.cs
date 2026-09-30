@@ -31,7 +31,7 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                 hero.SessionMembers.Any(member =>
                     member.LeftAt is null && member.GameSession.EndedAt is null
                 ),
-                hero.CreatedAt
+                hero.CreatedAt,
                 hero.Id == selectedHeroId
             ))
             .ToList();

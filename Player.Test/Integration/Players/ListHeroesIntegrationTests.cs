@@ -136,7 +136,7 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         int Level,
         int MaximumHealth,
         bool IsEngagedInActiveSession,
-        DateTimeOffset CreatedAt
+        DateTimeOffset CreatedAt,
         bool IsSelected
     );
 }
