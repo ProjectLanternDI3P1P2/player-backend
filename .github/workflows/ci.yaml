@@ -16,7 +16,7 @@ on:
       - main
       # Enable together with the matching line in cd.yaml when the development
       # environment exists. A merge into dev will then run CI again on the
-      # resulting commit, which lets CD publish the validated dev image.
+      # resulting commit while CD publishes its dev-tagged image separately.
       # - dev
   workflow_dispatch:
 

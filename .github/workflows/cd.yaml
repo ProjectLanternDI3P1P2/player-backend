@@ -1,70 +1,59 @@
 name: CD - Publish Docker image
 
-# CI owns validation. This workflow is deliberately separate so its runs are
-# visible in Actions as the delivery record: a successful CI publishes the exact
-# commit that CI validated. Application release tags add an immutable version tag
-# to Docker Hub. contracts-v* tags publish NuGet contracts only.
+# CD is deliberately separate from CI so its runs are visible in Actions. Branch
+# protection requires CI before code can reach main; CD then publishes that merged
+# commit. Application release tags add an immutable version tag to Docker Hub.
+# contracts-v* tags publish NuGet contracts only.
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
     branches:
       - main
       # Enable this line with the dev environment. It will publish :dev and
       # :dev-<sha> in the same Docker Hub repository, not a second repository.
       # - dev
-  push:
     tags: ["v*"]
   workflow_dispatch:
 
-# A newer validated branch commit supersedes a queued older one, so a floating
+# A newer branch commit supersedes a queued older one, so a floating
 # branch tag (:main, and later :dev) cannot be overwritten by stale code.
 # Release-tag runs are preserved.
 concurrency:
-  group: cd-docker-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'workflow_run' }}
+  group: cd-docker-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   IMAGE: diiageplayerimage/player-image
 
+permissions: {}
+
 jobs:
   publish:
     name: Publish Docker image
-    # A workflow_run also exists for pull requests. Never give its code Docker
-    # credentials: only a successful CI caused by a configured branch push may
-    # publish. The dev trigger above is deliberately disabled for now.
-    if: >-
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push') ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    # The workflow never runs from a pull request. Manual runs are kept to main
+    # as well, so Docker Hub credentials cannot publish an arbitrary branch.
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
-      - name: Checkout the validated source
+      - name: Checkout source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          # workflow_run itself checks out the default branch by default. Use
-          # the triggering CI commit instead, so the delivered image is exactly
-          # the image that was validated.
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           persist-credentials: false
 
       - name: Compute image tags
         id: image
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
           RELEASE_TAG: ${{ github.ref_name }}
-          DELIVERY_BRANCH: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
+          DELIVERY_BRANCH: ${{ github.ref_name }}
         run: |
           sha="$(git rev-parse HEAD)"
           short_sha="$(git rev-parse --short=7 HEAD)"
 
-          if [ "$EVENT_NAME" = "push" ]; then
+          if [ "$REF_TYPE" = "tag" ]; then
             # Release Please creates vX.Y.Z after the release pull request is merged.
             tags="${IMAGE}:${RELEASE_TAG}"
             source="release tag ${RELEASE_TAG}"
@@ -104,8 +93,6 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ steps.image.outputs.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Verify published image
         shell: bash
