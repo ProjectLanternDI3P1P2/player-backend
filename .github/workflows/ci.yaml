@@ -12,7 +12,12 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [main]
+    branches:
+      - main
+      # Enable together with the matching line in cd.yaml when the development
+      # environment exists. A merge into dev will then run CI again on the
+      # resulting commit, which lets CD publish the validated dev image.
+      # - dev
   workflow_dispatch:
 
 # One run per branch. Superseded pull request runs are cancelled; runs on dev and
