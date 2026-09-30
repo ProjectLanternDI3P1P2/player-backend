@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
+using Player.Presentation.Configuration;
 using Player.Presentation.Extensions.LogExtension;
 using Player.Presentation.Grpc.Interceptors;
 using Player.Presentation.Hubs.Filters;
@@ -17,17 +19,16 @@ public static class BuilderExtension
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApi();
         builder.Services.AddHealthChecks();
-        builder.Services.AddCors(options =>
-            options.AddPolicy(
-                GameClientCorsPolicy,
-                policy =>
-                    policy
-                        .WithOrigins("http://localhost:3000")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials()
-            )
-        );
+        builder
+            .Services.AddOptions<GameClientCorsOptions>()
+            .BindConfiguration(GameClientCorsOptions.SectionName)
+            .Validate(HasTrustedOrigins, "Cors:AllowedOrigins must contain valid HTTP(S) origins.")
+            .ValidateOnStart();
+        builder.Services.AddCors();
+        builder.Services.AddSingleton<
+            IConfigureOptions<Microsoft.AspNetCore.Cors.Infrastructure.CorsOptions>,
+            GameClientCorsPolicyConfiguration
+        >();
         // Gameplay is a Hub concern. REST controllers remain reserved for
         // non-gameplay resources (ADR-GLOB-001 and ADR 0018).
         builder.Services.AddSignalR(options => options.AddFilter<SignalRCommandExceptionFilter>());
@@ -62,4 +63,14 @@ public static class BuilderExtension
             preserveStaticLogger: true
         );
     }
+
+    private static bool HasTrustedOrigins(GameClientCorsOptions options)
+    {
+        return options.AllowedOrigins.Length > 0 && options.AllowedOrigins.All(IsTrustedOrigin);
+    }
+
+    private static bool IsTrustedOrigin(string origin) =>
+        Uri.TryCreate(origin, UriKind.Absolute, out Uri? uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+        && uri.GetLeftPart(UriPartial.Authority) == origin.TrimEnd('/');
 }

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -13,6 +14,28 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
 {
     private const char RecordSeparator = '\u001e';
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    [Fact]
+    public async Task SignalRNegotiate_Preflight_AllowsConfiguredBrowserOrigin()
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Options,
+            "/hubs/player/negotiate?negotiateVersion=1"
+        );
+        request.Headers.Add("Origin", "http://localhost:3000");
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+
+        HttpResponseMessage response = await fixture.HttpClient.SendAsync(
+            request,
+            TestContext.Current.CancellationToken
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response
+            .Headers.GetValues("Access-Control-Allow-Origin")
+            .Should()
+            .ContainSingle("http://localhost:3000");
+    }
 
     [Fact]
     public async Task CreateSession_OverSignalR_AcknowledgesAndBroadcastsTheAuthoritativeSnapshot()
