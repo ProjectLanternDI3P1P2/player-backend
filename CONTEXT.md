@@ -1,12 +1,8 @@
-# Backend Service Template
+# Player Backend Context
 
-The reference shape of a backend microservice for this project: a .NET Clean
+The vocabulary and conventions used by the Player microservice: a .NET Clean
 Architecture solution, the CI pipeline that guards it, and the branching flow
-that releases it. Every service repository starts from this one.
-
-There is no shared backend library, so this template is the only mechanism by
-which the five services share standards. What is written here is what they have
-in common.
+that releases it.
 
 ## Language
 
@@ -59,6 +55,27 @@ filter must never be required — it would block the pull request forever.
 _Avoid_: gate, status
 
 ### Service structure
+
+**Player**:
+The microservice that owns the player's business identity, heroes, matchmaking,
+and game-session lifecycle. It does not own technical authentication, inventory,
+equipment, a dungeon run, or combat resolution.
+
+**Game session**:
+A Player-owned game lifecycle record. It is not an authentication session and
+not a Dungeon-owned dungeon run.
+
+**Hero**:
+A Player-owned character belonging to one player and one hero class. It may be
+soft-deleted only after active references have been released.
+
+**Matchmaking group**:
+A Player-owned, formed set of compatible matchmaking entries. It can result in
+one game session after the roster is locked.
+
+**Idempotency key**:
+A stable key associated with a player command and its request fingerprint. A
+retry returns the recorded outcome instead of performing the transition again.
 
 **Microservice**:
 One deployable service, living in one repository, owning its own database. There

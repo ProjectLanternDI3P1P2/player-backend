@@ -1,0 +1,121 @@
+erDiagram
+    %% Final conceptual model for the Player microservice.
+    %% Dungeon identifiers and Keycloak claims are external: there are no local FKs.
+
+    PLAYER {
+        uuid player_id PK
+        string display_name
+        string account_status
+        int new_game_plus_level
+        datetime new_game_plus_updated_at
+        datetime created_at
+        datetime anonymized_at
+    }
+    HERO_CLASS {
+        string class_code PK
+        string label
+        int base_health
+        int base_mana
+    }
+    SKILL {
+        string skill_code PK
+        string class_code FK
+        string label
+        int required_level
+        string targeting_type
+    }
+    HERO {
+        uuid hero_id PK
+        uuid player_id FK
+        string class_code FK
+        string name
+        int level
+        int strength
+        int endurance
+        int agility
+        int intelligence
+        boolean is_deleted
+        datetime created_at
+        datetime deleted_at
+    }
+    HERO_SKILL {
+        uuid hero_id PK,FK
+        string skill_code PK,FK
+        datetime unlocked_at
+        boolean is_active
+    }
+
+    PLAYER ||--o{ HERO : owns
+    HERO_CLASS ||--o{ HERO : defines
+    HERO_CLASS ||--|{ SKILL : offers
+    HERO ||--o{ HERO_SKILL : masters
+    SKILL ||--o{ HERO_SKILL : is_mastered_by
+
+    IDEMPOTENCY_KEY {
+        uuid key PK
+        uuid player_id FK
+        string scope
+        string request_fingerprint
+        uuid produced_resource_id
+        datetime expires_at
+    }
+    PLAYER ||--o{ IDEMPOTENCY_KEY : issues
+
+    MATCHMAKING_QUEUE_ENTRY {
+        uuid queue_entry_id PK
+        uuid player_id FK
+        uuid hero_id FK
+        string status
+        int new_game_plus_level_at_entry
+        datetime entered_at
+        datetime left_at
+    }
+    MATCHMAKING_GROUP {
+        uuid group_id PK
+        string status
+        int min_new_game_plus_level
+        int max_new_game_plus_level
+        datetime formed_at
+    }
+    PLAYER ||--o{ MATCHMAKING_QUEUE_ENTRY : joins
+    HERO ||--o{ MATCHMAKING_QUEUE_ENTRY : mobilizes
+    MATCHMAKING_GROUP o|--o{ MATCHMAKING_QUEUE_ENTRY : groups
+
+    GAME_SESSION {
+        uuid session_id PK
+        string status
+        string mode
+        uuid dungeon_run_id "External DungeonRun identifier - not a FK"
+        string dungeon_seed
+        boolean progression_recorded
+        string termination_reason
+        datetime started_at
+        datetime last_active_at
+        datetime ended_at
+    }
+    GAME_SESSION_MEMBER {
+        uuid session_id PK,FK
+        uuid hero_id PK,FK
+        string member_status
+        datetime joined_at
+        datetime left_at
+    }
+    GAME_SESSION_TRANSITION {
+        uuid transition_id PK
+        uuid session_id FK
+        string source_status
+        string target_status
+        string cause
+        string actor
+        datetime occurred_at
+    }
+    MATCHMAKING_GROUP o|--o| GAME_SESSION : results_in
+    GAME_SESSION ||--|{ GAME_SESSION_MEMBER : contains
+    HERO ||--o{ GAME_SESSION_MEMBER : participates_in
+    GAME_SESSION ||--|{ GAME_SESSION_TRANSITION : records
+
+    %% Constraints outside Mermaid grammar:
+    %% - a group resulting in a session contains 2 to 4 active queue entries;
+    %% - the roster is locked before CreateDungeonRun;
+    %% - dungeon_run_id is set after Dungeon's idempotent acknowledgement;
+    %% - a key is unique for its player, scope, and associated request.
