@@ -180,6 +180,7 @@ are in [docs/GIT_RULES.md](./docs/GIT_RULES.md).
 | Workflow | Runs on | Does |
 | --- | --- | --- |
 | `ci.yaml` | PR to `dev` / `main`, push to `main` | Calls the reusable lint, test and build workflows |
+| `cd.yaml` | Successful CI following a push to `main`, application tag `v*` | Publishes and verifies the Docker image. Tags `main` and `main-<sha>` identify validated main commits; `vX.Y.Z` identifies an application release. |
 | `commitlint.yaml` | PR to `dev` / `main` | Checks every commit message of the pull request |
 | `sonar.yaml` | PR and push to `dev`, except Dependabot | Builds and tests under the SonarScanner for .NET, uploads coverage |
 | `security.yml` | PR to `dev` / `main`, push to `main` | Trivy filesystem scan, zizmor workflow audit |
