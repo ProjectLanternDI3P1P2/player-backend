@@ -30,9 +30,7 @@ public static class BuilderExtension
         );
         // Gameplay is a Hub concern. REST controllers remain reserved for
         // non-gameplay resources (ADR-GLOB-001 and ADR 0018).
-        builder.Services.AddSignalR(options =>
-            options.AddFilter(typeof(SignalRCommandExceptionFilter))
-        );
+        builder.Services.AddSignalR(options => options.AddFilter<SignalRCommandExceptionFilter>());
         builder.Services.AddGrpc(options =>
         {
             options.Interceptors.Add<CorrelationIdInterceptor>();
