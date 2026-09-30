@@ -13,7 +13,6 @@ namespace Player.Test.Integration.Players;
 public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
 {
     private const char RecordSeparator = '\u001e';
-    private const string SignalRHeroClassCode = "signalr-lobby-mage";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly Queue<JsonDocument> receivedMessages = new();
 
@@ -43,7 +42,8 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         Guid playerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
         Guid dungeonRunId = Guid.NewGuid();
-        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId));
+        string heroClassCode = HeroClassCode(heroId);
+        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId, heroClassCode));
         using WebSocket socket = await ConnectAsync();
 
         JsonElement lobby = await InvokeAndReadBroadcastAsync(
@@ -87,15 +87,16 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         Guid playerId = Guid.NewGuid();
         Guid firstHeroId = Guid.NewGuid();
         Guid secondHeroId = Guid.NewGuid();
+        string heroClassCode = HeroClassCode(firstHeroId);
         await fixture.SeedAsync(async context =>
         {
-            await SeedHeroAsync(context, playerId, firstHeroId);
+            await SeedHeroAsync(context, playerId, firstHeroId, heroClassCode);
             context.Heroes.Add(
                 new Hero
                 {
                     Id = secondHeroId,
                     PlayerId = playerId,
-                    ClassCode = SignalRHeroClassCode,
+                    ClassCode = heroClassCode,
                     Name = "Morgana",
                     Level = 1,
                     CreatedAt = DateTimeOffset.UtcNow,
@@ -107,7 +108,12 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             socket,
             "create-lobby-for-hero-change",
             "CreateSoloLobby",
-            new { commandId = Guid.NewGuid(), playerId, heroId = firstHeroId }
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                heroId = firstHeroId,
+            }
         );
 
         JsonElement changed = await InvokeAndReadBroadcastAsync(
@@ -247,7 +253,12 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         return receivedMessages.Dequeue();
     }
 
-    private static Task SeedHeroAsync(PlayerDbContext context, Guid playerId, Guid heroId)
+    private static Task SeedHeroAsync(
+        PlayerDbContext context,
+        Guid playerId,
+        Guid heroId,
+        string heroClassCode
+    )
     {
         context.Players.Add(
             new Player.Domain.Entities.Player
@@ -261,7 +272,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         context.HeroClasses.Add(
             new HeroClass
             {
-                Code = SignalRHeroClassCode,
+                Code = heroClassCode,
                 Label = "Mage",
                 BaseHealth = 45,
             }
@@ -271,7 +282,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             {
                 Id = heroId,
                 PlayerId = playerId,
-                ClassCode = SignalRHeroClassCode,
+                ClassCode = heroClassCode,
                 Name = "Merlin",
                 Level = 1,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -279,6 +290,8 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         );
         return Task.CompletedTask;
     }
+
+    private static string HeroClassCode(Guid heroId) => $"signalr-{heroId:N}";
 
     private sealed class StubDungeonClient(DungeonRun run) : IDungeonClient
     {

@@ -13,14 +13,28 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
 {
     private const string Scope = "game-session.change-hero";
 
-    public async Task<GameSessionSnapshot> Handle(ChangeSessionHeroCommand request, CancellationToken cancellationToken)
+    public async Task<GameSessionSnapshot> Handle(
+        ChangeSessionHeroCommand request,
+        CancellationToken cancellationToken
+    )
     {
         string fingerprint = Fingerprint(request.SessionId, request.HeroId);
-        IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+        IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
+            request.IdempotencyKey,
+            cancellationToken
+        );
         if (existing is not null)
-            return await GetExistingAsync(existing, request.PlayerId, fingerprint, cancellationToken);
+            return await GetExistingAsync(
+                existing,
+                request.PlayerId,
+                fingerprint,
+                cancellationToken
+            );
 
-        GameSession? session = await repository.GetByIdForUpdateAsync(request.SessionId, cancellationToken);
+        GameSession? session = await repository.GetByIdForUpdateAsync(
+            request.SessionId,
+            cancellationToken
+        );
         if (session is null)
             throw new KeyNotFoundException($"Session '{request.SessionId}' was not found.");
         if (session.CreatorPlayerId != request.PlayerId)
@@ -28,18 +42,35 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
         if (session.Status != "Lobby")
             throw new ConflictException("The roster is locked after the run starts.");
 
-        existing = await repository.GetIdempotencyKeyAsync(request.IdempotencyKey, cancellationToken);
+        existing = await repository.GetIdempotencyKeyAsync(
+            request.IdempotencyKey,
+            cancellationToken
+        );
         if (existing is not null)
-            return await GetExistingAsync(existing, request.PlayerId, fingerprint, cancellationToken);
+            return await GetExistingAsync(
+                existing,
+                request.PlayerId,
+                fingerprint,
+                cancellationToken
+            );
 
-        GameSessionMember? currentMember = session.Members.SingleOrDefault(member => member.MemberStatus == "Active");
+        GameSessionMember? currentMember = session.Members.SingleOrDefault(member =>
+            member.MemberStatus == "Active"
+        );
         if (currentMember is null)
             throw new ConflictException("The lobby has no active hero.");
 
-        Hero? hero = await repository.GetActiveHeroForUpdateAsync(request.HeroId, request.PlayerId, cancellationToken);
+        Hero? hero = await repository.GetActiveHeroForUpdateAsync(
+            request.HeroId,
+            request.PlayerId,
+            cancellationToken
+        );
         if (hero is null)
             throw new KeyNotFoundException($"Hero '{request.HeroId}' was not found.");
-        if (hero.Id != currentMember.HeroId && await repository.HasOpenSessionAsync(hero.Id, cancellationToken))
+        if (
+            hero.Id != currentMember.HeroId
+            && await repository.HasOpenSessionAsync(hero.Id, cancellationToken)
+        )
             throw new ConflictException("This hero already has an open session.");
 
         DateTimeOffset now = clock.UtcNow;
@@ -58,29 +89,59 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
             };
             session.Members.Add(replacement);
             repository.AddMember(replacement);
-            repository.AddTransition(new GameSessionTransition
-            {
-                Id = Guid.NewGuid(), SessionId = session.Id, SourceStatus = "Lobby", TargetStatus = "Lobby",
-                Cause = "HeroChanged", Actor = "player", OccurredAt = now,
-            });
+            repository.AddTransition(
+                new GameSessionTransition
+                {
+                    Id = Guid.NewGuid(),
+                    SessionId = session.Id,
+                    SourceStatus = "Lobby",
+                    TargetStatus = "Lobby",
+                    Cause = "HeroChanged",
+                    Actor = "player",
+                    OccurredAt = now,
+                }
+            );
             session.LastActiveAt = now;
         }
 
-        repository.AddIdempotencyKey(new IdempotencyKey
-        {
-            Key = request.IdempotencyKey, PlayerId = request.PlayerId, Scope = Scope,
-            RequestFingerprint = fingerprint, ProducedResourceId = session.Id, ExpiresAt = now.AddDays(1),
-        });
+        repository.AddIdempotencyKey(
+            new IdempotencyKey
+            {
+                Key = request.IdempotencyKey,
+                PlayerId = request.PlayerId,
+                Scope = Scope,
+                RequestFingerprint = fingerprint,
+                ProducedResourceId = session.Id,
+                ExpiresAt = now.AddDays(1),
+            }
+        );
         return GameSessionSnapshot.From(session);
     }
 
-    private async Task<GameSessionSnapshot> GetExistingAsync(IdempotencyKey key, Guid playerId, string fingerprint, CancellationToken cancellationToken)
+    private async Task<GameSessionSnapshot> GetExistingAsync(
+        IdempotencyKey key,
+        Guid playerId,
+        string fingerprint,
+        CancellationToken cancellationToken
+    )
     {
-        if (key.PlayerId != playerId || key.Scope != Scope || key.RequestFingerprint != fingerprint || key.ProducedResourceId is null)
-            throw new ConflictException("This idempotency key was already used for a different request.");
-        GameSession? session = await repository.GetByIdAsync(key.ProducedResourceId.Value, cancellationToken);
+        if (
+            key.PlayerId != playerId
+            || key.Scope != Scope
+            || key.RequestFingerprint != fingerprint
+            || key.ProducedResourceId is null
+        )
+            throw new ConflictException(
+                "This idempotency key was already used for a different request."
+            );
+        GameSession? session = await repository.GetByIdAsync(
+            key.ProducedResourceId.Value,
+            cancellationToken
+        );
         if (session is null)
-            throw new InvalidOperationException("The idempotent session result is no longer available.");
+            throw new InvalidOperationException(
+                "The idempotent session result is no longer available."
+            );
         return GameSessionSnapshot.From(session, true);
     }
 
