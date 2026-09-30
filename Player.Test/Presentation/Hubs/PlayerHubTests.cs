@@ -1,7 +1,6 @@
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Player.Application.Features.GameSessionUseCase.StartSoloRun;
 using Player.Presentation.Hubs;
@@ -42,7 +41,7 @@ public sealed class PlayerHubTests
         var clientProxy = new Mock<IClientProxy>();
         string groupName = $"session:{sessionId}";
         clients.Setup(value => value.Group(groupName)).Returns(clientProxy.Object);
-        var hub = new PlayerHub(sender.Object, Mock.Of<ILogger<PlayerHub>>())
+        var hub = new PlayerHub(sender.Object)
         {
             Context = context.Object,
             Groups = groups.Object,
@@ -69,38 +68,5 @@ public sealed class PlayerHubTests
                 ),
             Times.Once
         );
-    }
-
-    [Fact]
-    public async Task CreateSession_WhenCommandIsRejected_ReturnsExplicitRejection()
-    {
-        var sender = new Mock<ISender>();
-        sender
-            .Setup(service =>
-                service.Send<StartSoloRunResult>(
-                    It.IsAny<StartSoloRunCommand>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(
-                new Player.Domain.Exceptions.ConflictException("Hero already has a session.")
-            );
-        var context = new Mock<HubCallerContext>();
-        context.SetupGet(value => value.ConnectionId).Returns("connection-1");
-        var hub = new PlayerHub(sender.Object, Mock.Of<ILogger<PlayerHub>>())
-        {
-            Context = context.Object,
-            Groups = Mock.Of<IGroupManager>(),
-            Clients = Mock.Of<IHubCallerClients>(),
-        };
-
-        SessionCommandAcknowledgement acknowledgement = await hub.CreateSession(
-            new CreateSoloSessionCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid())
-        );
-
-        acknowledgement.Accepted.Should().BeFalse();
-        acknowledgement
-            .Error.Should()
-            .Be(new SessionCommandError("SESSION_CONFLICT", "Hero already has a session."));
     }
 }

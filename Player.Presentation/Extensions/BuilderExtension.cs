@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.SignalR;
 using Player.Presentation.Extensions.LogExtension;
 using Player.Presentation.Grpc.Interceptors;
+using Player.Presentation.Hubs.Filters;
 using Player.Presentation.Middleware;
 using Serilog;
 
@@ -28,7 +30,9 @@ public static class BuilderExtension
         );
         // Gameplay is a Hub concern. REST controllers remain reserved for
         // non-gameplay resources (ADR-GLOB-001 and ADR 0018).
-        builder.Services.AddSignalR();
+        builder.Services.AddSignalR(options =>
+            options.AddFilter(typeof(SignalRCommandExceptionFilter))
+        );
         builder.Services.AddGrpc(options =>
         {
             options.Interceptors.Add<CorrelationIdInterceptor>();
@@ -40,6 +44,7 @@ public static class BuilderExtension
         builder.Services.AddTransient<ExceptionHandlingMiddleware>();
         builder.Services.AddTransient<CorrelationIdInterceptor>();
         builder.Services.AddTransient<GrpcExceptionInterceptor>();
+        builder.Services.AddTransient<SignalRCommandExceptionFilter>();
         builder.Services.AddHttpClient();
 
         return builder;

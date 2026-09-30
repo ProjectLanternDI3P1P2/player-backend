@@ -84,6 +84,50 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         state.GetProperty("dungeonRunId").GetGuid().Should().Be(dungeonRunId);
     }
 
+    [Fact]
+    public async Task CreateSession_WhenTheHeroDoesNotExist_ReturnsTheGenericCommandRejection()
+    {
+        string connectionToken = await NegotiateAsync();
+        using WebSocket socket = await fixture
+            .CreateWebSocketClient()
+            .ConnectAsync(
+                new Uri($"ws://localhost/hubs/player?id={Uri.EscapeDataString(connectionToken)}"),
+                TestContext.Current.CancellationToken
+            );
+        await SendAsync(socket, new { protocol = "json", version = 1 });
+        using JsonDocument handshake = await ReceiveAsync(socket);
+        handshake.RootElement.TryGetProperty("error", out _).Should().BeFalse();
+
+        await SendAsync(
+            socket,
+            new
+            {
+                type = 1,
+                invocationId = "missing-hero",
+                target = "CreateSession",
+                arguments = new[]
+                {
+                    new
+                    {
+                        commandId = Guid.NewGuid(),
+                        playerId = Guid.NewGuid(),
+                        heroId = Guid.NewGuid(),
+                    },
+                },
+            }
+        );
+
+        using JsonDocument rejection = await ReceiveAsync(socket);
+        JsonElement result = rejection.RootElement.GetProperty("result");
+        result.GetProperty("accepted").GetBoolean().Should().BeFalse();
+        result
+            .GetProperty("error")
+            .GetProperty("code")
+            .GetString()
+            .Should()
+            .Be("RESOURCE_NOT_FOUND");
+    }
+
     private async Task<string> NegotiateAsync()
     {
         HttpResponseMessage response = await fixture.HttpClient.PostAsync(
