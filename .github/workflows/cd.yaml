@@ -1,22 +1,27 @@
 name: CD - Publish Docker image
 
 # CI owns validation. This workflow is deliberately separate so its runs are
-# visible in Actions as the delivery record: a successful main CI publishes the
-# exact commit that CI validated. Application release tags add an immutable
-# version tag to Docker Hub. contracts-v* tags publish NuGet contracts only.
+# visible in Actions as the delivery record: a successful CI publishes the exact
+# commit that CI validated. Application release tags add an immutable version tag
+# to Docker Hub. contracts-v* tags publish NuGet contracts only.
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [main]
+    branches:
+      - main
+      # Enable this line with the dev environment. It will publish :dev and
+      # :dev-<sha> in the same Docker Hub repository, not a second repository.
+      # - dev
   push:
     tags: ["v*"]
   workflow_dispatch:
 
-# A newer validated main commit supersedes a queued older one, so the floating
-# :main tag cannot be overwritten by stale code. Release-tag runs are preserved.
+# A newer validated branch commit supersedes a queued older one, so a floating
+# branch tag (:main, and later :dev) cannot be overwritten by stale code.
+# Release-tag runs are preserved.
 concurrency:
-  group: cd-docker-${{ github.event_name == 'workflow_run' && 'main' || github.ref }}
+  group: cd-docker-${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'workflow_run' }}
 
 env:
@@ -26,7 +31,8 @@ jobs:
   publish:
     name: Publish Docker image
     # A workflow_run also exists for pull requests. Never give its code Docker
-    # credentials: only a successful CI caused by a push to main may publish.
+    # credentials: only a successful CI caused by a configured branch push may
+    # publish. The dev trigger above is deliberately disabled for now.
     if: >-
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
@@ -53,6 +59,7 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_TAG: ${{ github.ref_name }}
+          DELIVERY_BRANCH: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref_name }}
         run: |
           sha="$(git rev-parse HEAD)"
           short_sha="$(git rev-parse --short=7 HEAD)"
@@ -62,9 +69,11 @@ jobs:
             tags="${IMAGE}:${RELEASE_TAG}"
             source="release tag ${RELEASE_TAG}"
           else
-            tags="${IMAGE}:main"
-            tags+=$'\n'"${IMAGE}:main-${short_sha}"
-            source="main commit ${short_sha}"
+            # With the commented dev trigger enabled, this automatically becomes
+            # :dev and :dev-<sha>; both are tags in this one private repository.
+            tags="${IMAGE}:${DELIVERY_BRANCH}"
+            tags+=$'\n'"${IMAGE}:${DELIVERY_BRANCH}-${short_sha}"
+            source="${DELIVERY_BRANCH} commit ${short_sha}"
           fi
 
           {
