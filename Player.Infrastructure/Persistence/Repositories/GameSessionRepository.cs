@@ -49,7 +49,8 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
 
     public void Add(GameSession session) => dbContext.GameSessions.Add(session);
 
-    public void RemoveMember(GameSessionMember member) => dbContext.GameSessionMembers.Remove(member);
+    public void RemoveMember(GameSessionMember member) =>
+        dbContext.GameSessionMembers.Remove(member);
 
     public void AddMember(GameSessionMember member) => dbContext.GameSessionMembers.Add(member);
 

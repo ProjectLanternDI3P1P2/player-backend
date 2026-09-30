@@ -42,10 +42,17 @@ public sealed class PlayerHub(ISender sender) : HubBase
         return SessionCommandAcknowledgement.Approve(session);
     }
 
-    public async Task<SessionCommandAcknowledgement> ChangeSessionHero(ChangeSessionHeroRequest command)
+    public async Task<SessionCommandAcknowledgement> ChangeSessionHero(
+        ChangeSessionHeroRequest command
+    )
     {
         GameSessionSnapshot session = await sender.Send<GameSessionSnapshot>(
-            new ChangeSessionHeroCommand(command.PlayerId, command.SessionId, command.HeroId, command.CommandId),
+            new ChangeSessionHeroCommand(
+                command.PlayerId,
+                command.SessionId,
+                command.HeroId,
+                command.CommandId
+            ),
             Context.ConnectionAborted
         );
         await PublishSessionAsync(session);
@@ -70,7 +77,12 @@ public sealed record CreateSoloLobbyRequest(Guid CommandId, Guid PlayerId, Guid 
 
 public sealed record StartSessionRequest(Guid CommandId, Guid PlayerId, Guid SessionId);
 
-public sealed record ChangeSessionHeroRequest(Guid CommandId, Guid PlayerId, Guid SessionId, Guid HeroId);
+public sealed record ChangeSessionHeroRequest(
+    Guid CommandId,
+    Guid PlayerId,
+    Guid SessionId,
+    Guid HeroId
+);
 
 public sealed record SessionSnapshotRequest(Guid PlayerId, Guid SessionId);
 

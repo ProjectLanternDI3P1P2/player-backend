@@ -28,9 +28,11 @@ public sealed class StartSessionCommandHandler(
             cancellationToken
         );
         if (existing is not null)
-            return await GetExistingAsync(
+            return await GameSessionIdempotency.GetExistingAsync(
+                repository,
                 existing,
                 request.PlayerId,
+                Scope,
                 fingerprint,
                 cancellationToken
             );
@@ -51,9 +53,11 @@ public sealed class StartSessionCommandHandler(
             cancellationToken
         );
         if (existing is not null)
-            return await GetExistingAsync(
+            return await GameSessionIdempotency.GetExistingAsync(
+                repository,
                 existing,
                 request.PlayerId,
+                Scope,
                 fingerprint,
                 cancellationToken
             );
@@ -113,33 +117,6 @@ public sealed class StartSessionCommandHandler(
             }
         );
         return GameSessionSnapshot.From(session);
-    }
-
-    private async Task<GameSessionSnapshot> GetExistingAsync(
-        IdempotencyKey key,
-        Guid playerId,
-        string fingerprint,
-        CancellationToken cancellationToken
-    )
-    {
-        if (
-            key.PlayerId != playerId
-            || key.Scope != Scope
-            || key.RequestFingerprint != fingerprint
-            || key.ProducedResourceId is null
-        )
-            throw new ConflictException(
-                "This idempotency key was already used for a different request."
-            );
-        GameSession? session = await repository.GetByIdAsync(
-            key.ProducedResourceId.Value,
-            cancellationToken
-        );
-        if (session is null)
-            throw new InvalidOperationException(
-                "The idempotent session result is no longer available."
-            );
-        return GameSessionSnapshot.From(session, true);
     }
 
     private static bool IsDungeonUnavailable(
