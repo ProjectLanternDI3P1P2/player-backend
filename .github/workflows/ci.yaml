@@ -36,3 +36,13 @@ jobs:
   build:
     name: Build
     uses: ./.github/workflows/_build.yaml
+
+  docker:
+    name: Build & push Docker image
+    needs: [lint, test, build]
+    # No Docker Hub credentials are made available to pull-request runs.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/docker-publish.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
