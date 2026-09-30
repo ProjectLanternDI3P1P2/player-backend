@@ -37,16 +37,14 @@ public sealed class StartSessionCommandHandler(
                 cancellationToken
             );
 
-        GameSession? session = await repository.GetByIdForUpdateAsync(
+        GameSession session = await LobbyAccess.GetCreatorLobbyForUpdateAsync(
+            repository,
             request.SessionId,
+            request.PlayerId,
+            "Only the lobby creator can start this session.",
+            "This session is no longer ready to start.",
             cancellationToken
         );
-        if (session is null)
-            throw new KeyNotFoundException($"Session '{request.SessionId}' was not found.");
-        if (session.CreatorPlayerId != request.PlayerId)
-            throw new ConflictException("Only the lobby creator can start this session.");
-        if (session.Status != "Lobby")
-            throw new ConflictException("This session is no longer ready to start.");
 
         existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,

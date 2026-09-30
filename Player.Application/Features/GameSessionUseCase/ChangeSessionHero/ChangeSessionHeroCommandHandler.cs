@@ -33,16 +33,14 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
                 cancellationToken
             );
 
-        GameSession? session = await repository.GetByIdForUpdateAsync(
+        GameSession session = await LobbyAccess.GetCreatorLobbyForUpdateAsync(
+            repository,
             request.SessionId,
+            request.PlayerId,
+            "Only the lobby creator can change the solo hero.",
+            "The roster is locked after the run starts.",
             cancellationToken
         );
-        if (session is null)
-            throw new KeyNotFoundException($"Session '{request.SessionId}' was not found.");
-        if (session.CreatorPlayerId != request.PlayerId)
-            throw new ConflictException("Only the lobby creator can change the solo hero.");
-        if (session.Status != "Lobby")
-            throw new ConflictException("The roster is locked after the run starts.");
 
         existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,

@@ -134,6 +134,55 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
     }
 
     [Fact]
+    public async Task GetSessionSnapshot_OverSignalR_ReturnsTheAuthoritativeLobby()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        string heroClassCode = HeroClassCode(heroId);
+        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId, heroClassCode));
+        using WebSocket socket = await ConnectAsync();
+        JsonElement lobby = await InvokeAndReadBroadcastAsync(
+            socket,
+            "create-lobby-for-snapshot",
+            "CreateSoloLobby",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                heroId,
+            }
+        );
+        await SendAsync(
+            socket,
+            new
+            {
+                type = 1,
+                invocationId = "get-session-snapshot",
+                target = "GetSessionSnapshot",
+                arguments = new[]
+                {
+                    new { playerId, sessionId = lobby.GetProperty("sessionId").GetGuid() },
+                },
+            }
+        );
+        using JsonDocument response = await ReceiveAsync(socket);
+
+        response
+            .RootElement.GetProperty("result")
+            .GetProperty("accepted")
+            .GetBoolean()
+            .Should()
+            .BeTrue();
+        response
+            .RootElement.GetProperty("result")
+            .GetProperty("session")
+            .GetProperty("state")
+            .GetString()
+            .Should()
+            .Be("Lobby");
+    }
+
+    [Fact]
     public async Task CreateSoloLobby_WhenTheHeroDoesNotExist_ReturnsTheGenericCommandRejection()
     {
         using WebSocket socket = await ConnectAsync();

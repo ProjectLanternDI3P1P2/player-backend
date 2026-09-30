@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Moq;
 using Player.Application.Features.GameSessionUseCase;
+using Player.Application.Features.GameSessionUseCase.ChangeSessionHero;
 using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Application.Features.GameSessionUseCase.StartSession;
 using Player.Application.Ports;
@@ -162,6 +163,80 @@ public sealed class GameSessionHandlersTests
         await action.Should().ThrowAsync<InvalidOperationException>();
         session.Status.Should().Be("Lobby");
         session.DungeonRunId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ChangeSessionHero_ByCreator_ReplacesTheLobbyRoster()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid previousHeroId = Guid.NewGuid();
+        Guid replacementHeroId = Guid.NewGuid();
+        Guid sessionId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, previousHeroId);
+        GameSession lobby = Lobby(sessionId, playerId, previousHeroId);
+        repository
+            .Setup(x => x.GetByIdForUpdateAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(lobby);
+        repository
+            .Setup(x =>
+                x.GetActiveHeroForUpdateAsync(
+                    replacementHeroId,
+                    playerId,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new Hero
+                {
+                    Id = replacementHeroId,
+                    PlayerId = playerId,
+                    Name = "Morgana",
+                    ClassCode = "mage",
+                    Level = 2,
+                }
+            );
+        repository
+            .Setup(x => x.HasOpenSessionAsync(replacementHeroId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var handler = new ChangeSessionHeroCommandHandler(repository.Object, new FixedClock());
+
+        GameSessionSnapshot result = await handler.Handle(
+            new ChangeSessionHeroCommand(playerId, sessionId, replacementHeroId, Guid.NewGuid()),
+            TestContext.Current.CancellationToken
+        );
+
+        result.Members.Should().ContainSingle(member => member.Id == replacementHeroId);
+        repository.Verify(
+            x =>
+                x.RemoveMember(It.Is<GameSessionMember>(member => member.HeroId == previousHeroId)),
+            Times.Once
+        );
+        repository.Verify(
+            x =>
+                x.AddMember(It.Is<GameSessionMember>(member => member.HeroId == replacementHeroId)),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task ChangeSessionHero_ByNonCreator_IsRejected()
+    {
+        Guid creatorId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        Guid sessionId = Guid.NewGuid();
+        var repository = CreateRepository(creatorId, heroId);
+        repository
+            .Setup(x => x.GetByIdForUpdateAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Lobby(sessionId, creatorId, heroId));
+        var handler = new ChangeSessionHeroCommandHandler(repository.Object, new FixedClock());
+
+        Func<Task> action = () =>
+            handler.Handle(
+                new ChangeSessionHeroCommand(Guid.NewGuid(), sessionId, heroId, Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
+
+        await action.Should().ThrowAsync<ConflictException>();
     }
 
     private static Mock<IGameSessionRepository> CreateRepository(Guid playerId, Guid heroId)
