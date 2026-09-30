@@ -13,6 +13,7 @@ namespace Player.Test.Integration.Players;
 public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
 {
     private const char RecordSeparator = '\u001e';
+    private const string SignalRHeroClassCode = "signalr-mage";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [Fact]
@@ -205,7 +206,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         context.HeroClasses.Add(
             new HeroClass
             {
-                Code = "mage",
+                Code = SignalRHeroClassCode,
                 Label = "Mage",
                 BaseHealth = 45,
             }
@@ -215,7 +216,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             {
                 Id = heroId,
                 PlayerId = playerId,
-                ClassCode = "mage",
+                ClassCode = SignalRHeroClassCode,
                 Name = "Merlin",
                 Level = 1,
                 CreatedAt = DateTimeOffset.UtcNow,
