@@ -10,6 +10,7 @@ public interface IHeroRepository
         Guid playerId,
         CancellationToken cancellationToken
     );
+    Task<Guid?> GetSelectedHeroIdAsync(Guid playerId, CancellationToken cancellationToken);
     Task<IdempotencyKey?> GetIdempotencyKeyAsync(Guid key, CancellationToken cancellationToken);
     Task<Hero?> GetHeroByIdAsync(Guid heroId, CancellationToken cancellationToken);
     Task<Hero?> GetActiveByIdAndPlayerIdAsync(

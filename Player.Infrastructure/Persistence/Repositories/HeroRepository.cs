@@ -30,6 +30,13 @@ public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
             .Take(10)
             .ToListAsync(cancellationToken);
 
+    public Task<Guid?> GetSelectedHeroIdAsync(Guid playerId, CancellationToken cancellationToken) =>
+        dbContext
+            .Players.AsNoTracking()
+            .Where(player => player.Id == playerId)
+            .Select(player => player.SelectedHeroId)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<IdempotencyKey?> GetIdempotencyKeyAsync(
         Guid key,
         CancellationToken cancellationToken

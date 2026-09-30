@@ -16,6 +16,9 @@ public sealed class ListHeroesQueryHandlerTests
         repository
             .Setup(x => x.ListActiveByPlayerIdAsync(playerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([CreateHero("Aldric", 60, 2, false), CreateHero("Brom", 50, 0, true)]);
+        repository
+            .Setup(x => x.GetSelectedHeroIdAsync(playerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
         var handler = new ListHeroesQueryHandler(repository.Object);
 
         IReadOnlyList<HeroSummary> result = await handler.Handle(
@@ -27,8 +30,8 @@ public sealed class ListHeroesQueryHandlerTests
             .Should()
             .BeEquivalentTo(
                 [
-                    new HeroSummary(result[0].Id, "Aldric", "warrior", 1, 72, false),
-                    new HeroSummary(result[1].Id, "Brom", "shaman", 1, 50, true),
+                    new HeroSummary(result[0].Id, "Aldric", "warrior", 1, 72, false, false),
+                    new HeroSummary(result[1].Id, "Brom", "shaman", 1, 50, true, false),
                 ],
                 options => options.WithStrictOrdering()
             );

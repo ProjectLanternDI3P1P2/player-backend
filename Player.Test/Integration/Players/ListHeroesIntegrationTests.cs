@@ -29,8 +29,8 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
             .Should()
             .BeEquivalentTo(
                 [
-                    new HeroResponse("Aldric", "warrior", 3, 72, false),
-                    new HeroResponse("Brom", "shaman", 1, 50, true),
+                    new HeroResponse("Aldric", "warrior", 3, 72, false, true),
+                    new HeroResponse("Brom", "shaman", 1, 50, true, false),
                 ],
                 options => options.WithStrictOrdering()
             );
@@ -101,6 +101,7 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                 Id = playerId,
                 DisplayName = "test-player",
                 AccountStatus = "Active",
+                SelectedHeroId = aldric.Id,
                 CreatedAt = now,
             },
             warrior,
@@ -118,6 +119,7 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         string ClassCode,
         int Level,
         int MaximumHealth,
-        bool IsEngagedInActiveSession
+        bool IsEngagedInActiveSession,
+        bool IsSelected
     );
 }

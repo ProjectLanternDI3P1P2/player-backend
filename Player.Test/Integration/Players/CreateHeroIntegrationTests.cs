@@ -138,6 +138,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         string ClassCode,
         int Level,
         int MaximumHealth,
+        DateTimeOffset CreatedAt,
         IReadOnlyList<string> UnlockedSkillCodes,
         bool AlreadyExists
     );
