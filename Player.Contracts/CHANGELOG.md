@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v2.0.0...contracts-v3.0.0) (2026-09-30)
+
+
+### Added
+
+* **player:** implement player data model persistence ([94062d8](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/94062d8b3558a5245c361ffe3b46407582f9662b))
+* **player:** implement player data model persistence ([89244c7](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/89244c7cf6764fae54f99eca78a05e0be9991788))
+
 ## [2.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v1.0.0...contracts-v2.0.0) (2026-09-23)
 
 
