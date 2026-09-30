@@ -82,6 +82,52 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
     }
 
     [Fact]
+    public async Task ChangeSessionHero_OverSignalR_ReplacesTheLobbyRosterHero()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid firstHeroId = Guid.NewGuid();
+        Guid secondHeroId = Guid.NewGuid();
+        await fixture.SeedAsync(async context =>
+        {
+            await SeedHeroAsync(context, playerId, firstHeroId);
+            context.Heroes.Add(
+                new Hero
+                {
+                    Id = secondHeroId,
+                    PlayerId = playerId,
+                    ClassCode = SignalRHeroClassCode,
+                    Name = "Morgana",
+                    Level = 1,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                }
+            );
+        });
+        using WebSocket socket = await ConnectAsync();
+        JsonElement lobby = await InvokeAndReadBroadcastAsync(
+            socket,
+            "create-lobby-for-hero-change",
+            "CreateSoloLobby",
+            new { commandId = Guid.NewGuid(), playerId, heroId = firstHeroId }
+        );
+
+        JsonElement changed = await InvokeAndReadBroadcastAsync(
+            socket,
+            "change-lobby-hero",
+            "ChangeSessionHero",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                sessionId = lobby.GetProperty("sessionId").GetGuid(),
+                heroId = secondHeroId,
+            }
+        );
+
+        changed.GetProperty("members").GetArrayLength().Should().Be(1);
+        changed.GetProperty("members")[0].GetProperty("id").GetGuid().Should().Be(secondHeroId);
+    }
+
+    [Fact]
     public async Task CreateSoloLobby_WhenTheHeroDoesNotExist_ReturnsTheGenericCommandRejection()
     {
         using WebSocket socket = await ConnectAsync();

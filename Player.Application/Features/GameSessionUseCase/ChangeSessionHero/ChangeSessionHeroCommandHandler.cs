@@ -51,12 +51,13 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
             {
                 SessionId = session.Id,
                 HeroId = hero.Id,
+                GameSession = session,
                 Hero = hero,
                 MemberStatus = "Active",
                 JoinedAt = now,
             };
-            repository.AddMember(replacement);
             session.Members.Add(replacement);
+            repository.AddMember(replacement);
             repository.AddTransition(new GameSessionTransition
             {
                 Id = Guid.NewGuid(), SessionId = session.Id, SourceStatus = "Lobby", TargetStatus = "Lobby",
