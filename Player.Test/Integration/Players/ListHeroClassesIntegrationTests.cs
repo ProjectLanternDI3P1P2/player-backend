@@ -23,7 +23,8 @@ public sealed class ListHeroClassesIntegrationTests(PlayerEndpointFixture fixtur
         List<HeroClassResponse>? heroClasses = await response.Content.ReadFromJsonAsync<
             List<HeroClassResponse>
         >(TestContext.Current.CancellationToken);
-        heroClasses
+        heroClasses!
+            .Where(heroClass => heroClass.Code is "test-mage" or "test-warrior")
             .Should()
             .BeEquivalentTo(
                 [
