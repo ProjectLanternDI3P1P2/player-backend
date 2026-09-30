@@ -35,7 +35,8 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                         3,
                         72,
                         false,
-                        new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero)
+                        new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
+                        true
                     ),
                     new HeroResponse(
                         "Brom",
@@ -43,7 +44,8 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                         1,
                         50,
                         true,
-                        new(2026, 9, 28, 12, 1, 0, TimeSpan.Zero)
+                        new(2026, 9, 28, 12, 1, 0, TimeSpan.Zero),
+                        false
                     ),
                 ],
                 options => options.WithStrictOrdering()
@@ -115,6 +117,7 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                 Id = playerId,
                 DisplayName = "test-player",
                 AccountStatus = "Active",
+                SelectedHeroId = aldric.Id,
                 CreatedAt = now,
             },
             warrior,
@@ -134,5 +137,6 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         int MaximumHealth,
         bool IsEngagedInActiveSession,
         DateTimeOffset CreatedAt
+        bool IsSelected
     );
 }

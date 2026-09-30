@@ -16,6 +16,9 @@ public sealed class ListHeroesQueryHandlerTests
         repository
             .Setup(x => x.ListActiveByPlayerIdAsync(playerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([CreateHero("Aldric", 60, 2, false), CreateHero("Brom", 50, 0, true)]);
+        repository
+            .Setup(x => x.GetSelectedHeroIdAsync(playerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
         var handler = new ListHeroesQueryHandler(repository.Object);
 
         IReadOnlyList<HeroSummary> result = await handler.Handle(
@@ -34,7 +37,8 @@ public sealed class ListHeroesQueryHandlerTests
                         1,
                         72,
                         false,
-                        new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero)
+                        new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
+                        false
                     ),
                     new HeroSummary(
                         result[1].Id,
@@ -43,7 +47,8 @@ public sealed class ListHeroesQueryHandlerTests
                         1,
                         50,
                         true,
-                        new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero)
+                        new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
+                        false
                     ),
                 ],
                 options => options.WithStrictOrdering()

@@ -33,6 +33,7 @@ public sealed class GetHeroSheetIntegrationTests(PlayerEndpointFixture fixture)
                     "Aldric",
                     ClassCode(heroId),
                     4,
+                    new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero),
                     new AttributesResponse(10, 3, 4, 2),
                     78,
                     [new AbilityResponse(SkillCode(heroId), "Strike", "SingleEnemy")]
@@ -114,6 +115,7 @@ public sealed class GetHeroSheetIntegrationTests(PlayerEndpointFixture fixture)
         string Name,
         string ClassCode,
         int Level,
+        DateTimeOffset CreatedAt,
         AttributesResponse Attributes,
         int MaximumHealth,
         IReadOnlyList<AbilityResponse> Abilities

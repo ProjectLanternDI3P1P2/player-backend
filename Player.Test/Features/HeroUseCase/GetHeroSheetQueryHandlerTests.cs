@@ -13,6 +13,7 @@ public sealed class GetHeroSheetQueryHandlerTests
     {
         Guid playerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
+        DateTimeOffset createdAt = new(2026, 9, 29, 12, 0, 0, TimeSpan.Zero);
         var repository = new Mock<IHeroRepository>();
         repository
             .Setup(x =>
@@ -29,6 +30,7 @@ public sealed class GetHeroSheetQueryHandlerTests
                     Endurance = 3,
                     Agility = 4,
                     Intelligence = 2,
+                    CreatedAt = createdAt,
                     HeroClass = new HeroClass { BaseHealth = 60 },
                     HeroSkills =
                     [
@@ -60,6 +62,7 @@ public sealed class GetHeroSheetQueryHandlerTests
                     "Aldric",
                     "warrior",
                     4,
+                    createdAt,
                     new HeroAttributes(10, 3, 4, 2),
                     78,
                     [

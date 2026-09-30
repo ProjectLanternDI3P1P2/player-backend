@@ -7,6 +7,14 @@ namespace Player.Infrastructure.Persistence.Repositories;
 
 public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
 {
+    public async Task<IReadOnlyList<HeroClass>> ListHeroClassesAsync(
+        CancellationToken cancellationToken
+    ) =>
+        await dbContext
+            .HeroClasses.AsNoTracking()
+            .OrderBy(x => x.Code)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<Hero>> ListActiveByPlayerIdAsync(
         Guid playerId,
         CancellationToken cancellationToken
@@ -21,6 +29,13 @@ public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
             .ThenBy(x => x.Id)
             .Take(10)
             .ToListAsync(cancellationToken);
+
+    public Task<Guid?> GetSelectedHeroIdAsync(Guid playerId, CancellationToken cancellationToken) =>
+        dbContext
+            .Players.AsNoTracking()
+            .Where(player => player.Id == playerId)
+            .Select(player => player.SelectedHeroId)
+            .SingleOrDefaultAsync(cancellationToken);
 
     public Task<IdempotencyKey?> GetIdempotencyKeyAsync(
         Guid key,

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Player.Application.Features.HeroUseCase.CreateHero;
 using Player.Application.Features.HeroUseCase.GetHeroSheet;
 using Player.Application.Features.HeroUseCase.ListHeroes;
+using Player.Application.Features.HeroUseCase.SelectHero;
 using Player.Presentation.DTO;
 
 namespace Player.Presentation.Controllers;
@@ -55,5 +56,16 @@ public sealed class HeroesController(ISender sender) : ControllerBase
         return result.AlreadyExists
             ? Ok(result)
             : Created($"/api/v1/players/{playerId}/heroes/{result.Id}", result);
+    }
+
+    [HttpPut("{heroId:guid}/selection")]
+    public async Task<IActionResult> SelectAsync(
+        Guid playerId,
+        Guid heroId,
+        CancellationToken cancellationToken
+    )
+    {
+        await sender.Send(new SelectHeroCommand(playerId, heroId), cancellationToken);
+        return NoContent();
     }
 }

@@ -12,6 +12,10 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
         CancellationToken cancellationToken
     )
     {
+        Guid? selectedHeroId = await repository.GetSelectedHeroIdAsync(
+            request.PlayerId,
+            cancellationToken
+        );
         IReadOnlyList<Hero> heroes = await repository.ListActiveByPlayerIdAsync(
             request.PlayerId,
             cancellationToken
@@ -28,6 +32,7 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                     member.LeftAt is null && member.GameSession.EndedAt is null
                 ),
                 hero.CreatedAt
+                hero.Id == selectedHeroId
             ))
             .ToList();
     }

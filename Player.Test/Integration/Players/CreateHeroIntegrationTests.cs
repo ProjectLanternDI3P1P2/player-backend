@@ -65,7 +65,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         );
 
         duplicateName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        invalidName.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        invalidName.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
 
         foreach (
             string name in new[]
@@ -138,6 +138,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         string ClassCode,
         int Level,
         int MaximumHealth,
+        DateTimeOffset CreatedAt,
         IReadOnlyList<string> UnlockedSkillCodes,
         bool AlreadyExists
     );

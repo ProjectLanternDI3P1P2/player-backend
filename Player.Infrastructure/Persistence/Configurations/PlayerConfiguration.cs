@@ -14,6 +14,7 @@ public sealed class PlayerConfiguration : IEntityTypeConfiguration<PlayerEntity>
         builder.Property(x => x.AccountStatus).HasColumnName("account_status").HasMaxLength(32);
         builder.Property(x => x.NewGamePlusLevel).HasColumnName("new_game_plus_level");
         builder.Property(x => x.NewGamePlusUpdatedAt).HasColumnName("new_game_plus_updated_at");
+        builder.Property(x => x.SelectedHeroId).HasColumnName("selected_hero_id");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.AnonymizedAt).HasColumnName("anonymized_at");
     }

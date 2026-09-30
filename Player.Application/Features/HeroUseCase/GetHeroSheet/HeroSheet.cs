@@ -5,6 +5,7 @@ public sealed record HeroSheet(
     string Name,
     string ClassCode,
     int Level,
+    DateTimeOffset CreatedAt,
     HeroAttributes Attributes,
     int MaximumHealth,
     IReadOnlyList<HeroAbility> Abilities
