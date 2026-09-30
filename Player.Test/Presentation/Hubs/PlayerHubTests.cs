@@ -2,7 +2,8 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
-using Player.Application.Features.GameSessionUseCase.StartSoloRun;
+using Player.Application.Features.GameSessionUseCase;
+using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Presentation.Hubs;
 
 namespace Player.Test.Presentation.Hubs;
@@ -10,7 +11,7 @@ namespace Player.Test.Presentation.Hubs;
 public sealed class PlayerHubTests
 {
     [Fact]
-    public async Task CreateSession_AcceptsCommand_AddsAuthorizedGroup_AndBroadcastsSnapshot()
+    public async Task CreateSoloLobby_AddsTheCallerToTheAuthorizedGroupAndBroadcastsTheSnapshot()
     {
         Guid playerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
@@ -18,18 +19,20 @@ public sealed class PlayerHubTests
         var sender = new Mock<ISender>();
         sender
             .Setup(service =>
-                service.Send<StartSoloRunResult>(
-                    It.IsAny<StartSoloRunCommand>(),
+                service.Send<GameSessionSnapshot>(
+                    It.IsAny<CreateSoloLobbyCommand>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .ReturnsAsync(
-                new StartSoloRunResult(
+                new GameSessionSnapshot(
                     sessionId,
-                    new SessionHero(heroId, "Merlin", "mage", 1),
-                    "Active",
-                    Guid.NewGuid(),
-                    "seed",
+                    playerId,
+                    "Lobby",
+                    "Solo",
+                    [new SessionHero(heroId, "Merlin", "mage", 1)],
+                    null,
+                    null,
                     null,
                     false
                 )
@@ -38,9 +41,9 @@ public sealed class PlayerHubTests
         context.SetupGet(value => value.ConnectionId).Returns("connection-1");
         var groups = new Mock<IGroupManager>();
         var clients = new Mock<IHubCallerClients>();
-        var clientProxy = new Mock<IClientProxy>();
+        var proxy = new Mock<IClientProxy>();
         string groupName = $"session:{sessionId}";
-        clients.Setup(value => value.Group(groupName)).Returns(clientProxy.Object);
+        clients.Setup(value => value.Group(groupName)).Returns(proxy.Object);
         var hub = new PlayerHub(sender.Object)
         {
             Context = context.Object,
@@ -48,18 +51,18 @@ public sealed class PlayerHubTests
             Clients = clients.Object,
         };
 
-        SessionCommandAcknowledgement acknowledgement = await hub.CreateSession(
-            new CreateSoloSessionCommand(Guid.NewGuid(), playerId, heroId)
+        SessionCommandAcknowledgement acknowledgement = await hub.CreateSoloLobby(
+            new CreateSoloLobbyRequest(Guid.NewGuid(), playerId, heroId)
         );
 
         acknowledgement.Accepted.Should().BeTrue();
-        acknowledgement.Session!.SessionId.Should().Be(sessionId);
+        acknowledgement.Session!.State.Should().Be("Lobby");
         groups.Verify(
             value =>
                 value.AddToGroupAsync("connection-1", groupName, It.IsAny<CancellationToken>()),
             Times.Once
         );
-        clientProxy.Verify(
+        proxy.Verify(
             value =>
                 value.SendCoreAsync(
                     nameof(SessionStateChanged),

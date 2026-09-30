@@ -1,43 +1,35 @@
 using System.Security.Cryptography;
 using System.Text;
 using MediatR;
-using Player.Application.Ports;
 using Player.Domain.Entities;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
 
-namespace Player.Application.Features.GameSessionUseCase.StartSoloRun;
+namespace Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 
-public sealed class StartSoloRunCommandHandler(
-    IGameSessionRepository repository,
-    IDungeonClient dungeonClient,
-    IClock clock
-) : IRequestHandler<StartSoloRunCommand, StartSoloRunResult>
+public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository repository, IClock clock)
+    : IRequestHandler<CreateSoloLobbyCommand, GameSessionSnapshot>
 {
-    private const string Scope = "game-session.start-solo";
-    private const string Active = "Active";
-    private const string Failed = "Failed";
+    private const string Scope = "game-session.create-solo-lobby";
 
-    public async Task<StartSoloRunResult> Handle(
-        StartSoloRunCommand request,
+    public async Task<GameSessionSnapshot> Handle(
+        CreateSoloLobbyCommand request,
         CancellationToken cancellationToken
     )
     {
-        string fingerprint = CreateFingerprint(request.HeroId);
+        string fingerprint = Fingerprint(request.HeroId);
         IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,
             cancellationToken
         );
         if (existing is not null)
-        {
-            return await GetIdempotentResultAsync(
+            return await GetExistingAsync(
                 existing,
                 request.PlayerId,
                 fingerprint,
                 cancellationToken
             );
-        }
 
         Hero? hero = await repository.GetActiveHeroForUpdateAsync(
             request.HeroId,
@@ -45,36 +37,30 @@ public sealed class StartSoloRunCommandHandler(
             cancellationToken
         );
         if (hero is null)
-        {
             throw new KeyNotFoundException($"Hero '{request.HeroId}' was not found.");
-        }
 
         existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,
             cancellationToken
         );
         if (existing is not null)
-        {
-            return await GetIdempotentResultAsync(
+            return await GetExistingAsync(
                 existing,
                 request.PlayerId,
                 fingerprint,
                 cancellationToken
             );
-        }
 
-        if (await repository.HasActiveSessionAsync(hero.Id, cancellationToken))
-        {
-            throw new ConflictException("This hero already has an active session.");
-        }
+        if (await repository.HasOpenSessionAsync(hero.Id, cancellationToken))
+            throw new ConflictException("This hero already has an open session.");
 
         DateTimeOffset now = clock.UtcNow;
         var session = new GameSession
         {
             Id = Guid.NewGuid(),
-            Status = Failed,
+            CreatorPlayerId = request.PlayerId,
+            Status = "Lobby",
             Mode = "Solo",
-            TerminationReason = "DungeonUnavailable",
             LastActiveAt = now,
             Members =
             [
@@ -92,8 +78,8 @@ public sealed class StartSoloRunCommandHandler(
                 {
                     Id = Guid.NewGuid(),
                     SourceStatus = "None",
-                    TargetStatus = Failed,
-                    Cause = "DungeonRunRequested",
+                    TargetStatus = "Lobby",
+                    Cause = "LobbyCreated",
                     Actor = "player",
                     OccurredAt = now,
                 },
@@ -111,41 +97,10 @@ public sealed class StartSoloRunCommandHandler(
                 ExpiresAt = now.AddDays(1),
             }
         );
-
-        try
-        {
-            DungeonRun run = await dungeonClient.StartRunAsync(
-                session.Id,
-                hero.Id,
-                cancellationToken
-            );
-            session.Status = Active;
-            session.DungeonRunId = run.Id;
-            session.DungeonSeed = run.Seed;
-            session.StartedAt = now;
-            session.TerminationReason = null;
-            session.Transitions.Add(
-                new GameSessionTransition
-                {
-                    Id = Guid.NewGuid(),
-                    SessionId = session.Id,
-                    SourceStatus = Failed,
-                    TargetStatus = Active,
-                    Cause = "DungeonRunCreated",
-                    Actor = "dungeon",
-                    OccurredAt = now,
-                }
-            );
-        }
-        catch (Exception exception) when (IsDungeonUnavailable(exception, cancellationToken))
-        {
-            session.TerminationReason = "DungeonUnavailable";
-        }
-
-        return ToResult(session, false);
+        return GameSessionSnapshot.From(session);
     }
 
-    private async Task<StartSoloRunResult> GetIdempotentResultAsync(
+    private async Task<GameSessionSnapshot> GetExistingAsync(
         IdempotencyKey key,
         Guid playerId,
         string fingerprint,
@@ -158,48 +113,20 @@ public sealed class StartSoloRunCommandHandler(
             || key.RequestFingerprint != fingerprint
             || key.ProducedResourceId is null
         )
-        {
             throw new ConflictException(
                 "This idempotency key was already used for a different request."
             );
-        }
-
         GameSession? session = await repository.GetByIdAsync(
             key.ProducedResourceId.Value,
             cancellationToken
         );
         if (session is null)
-        {
             throw new InvalidOperationException(
                 "The idempotent session result is no longer available."
             );
-        }
-
-        return ToResult(session, true);
+        return GameSessionSnapshot.From(session, true);
     }
 
-    private static StartSoloRunResult ToResult(GameSession session, bool alreadyExists)
-    {
-        Hero hero = session.Members.Single().Hero;
-        return new(
-            session.Id,
-            new SessionHero(hero.Id, hero.Name, hero.ClassCode, hero.Level),
-            session.Status,
-            session.DungeonRunId,
-            session.DungeonSeed,
-            session.TerminationReason,
-            alreadyExists
-        );
-    }
-
-    private static bool IsDungeonUnavailable(
-        Exception exception,
-        CancellationToken cancellationToken
-    ) =>
-        exception is HttpRequestException
-        || exception is TimeoutException
-        || (exception is OperationCanceledException && !cancellationToken.IsCancellationRequested);
-
-    private static string CreateFingerprint(Guid heroId) =>
+    private static string Fingerprint(Guid heroId) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(heroId.ToString("N"))));
 }
