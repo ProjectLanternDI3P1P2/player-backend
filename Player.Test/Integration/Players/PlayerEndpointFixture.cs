@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Player.Application.Ports;
 using Player.Infrastructure.Persistence;
@@ -11,6 +12,10 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
 
     public HttpClient HttpClient =>
         factory?.CreateClient() ?? throw new InvalidOperationException("Fixture not initialized.");
+
+    public WebSocketClient CreateWebSocketClient() =>
+        factory?.Server.CreateWebSocketClient()
+        ?? throw new InvalidOperationException("Fixture not initialized.");
 
     public async Task SeedAsync(Func<PlayerDbContext, Task> seed)
     {
