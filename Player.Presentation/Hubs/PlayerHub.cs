@@ -1,5 +1,6 @@
 using MediatR;
 using Player.Application.Features.GameSessionUseCase;
+using Player.Application.Features.GameSessionUseCase.ChangeSessionHero;
 using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Application.Features.GameSessionUseCase.GetSessionSnapshot;
 using Player.Application.Features.GameSessionUseCase.StartSession;
@@ -41,6 +42,16 @@ public sealed class PlayerHub(ISender sender) : HubBase
         return SessionCommandAcknowledgement.Approve(session);
     }
 
+    public async Task<SessionCommandAcknowledgement> ChangeSessionHero(ChangeSessionHeroRequest command)
+    {
+        GameSessionSnapshot session = await sender.Send<GameSessionSnapshot>(
+            new ChangeSessionHeroCommand(command.PlayerId, command.SessionId, command.HeroId, command.CommandId),
+            Context.ConnectionAborted
+        );
+        await PublishSessionAsync(session);
+        return SessionCommandAcknowledgement.Approve(session);
+    }
+
     private async Task PublishSessionAsync(GameSessionSnapshot session)
     {
         string groupName = GroupName(session.SessionId);
@@ -58,6 +69,8 @@ public sealed class PlayerHub(ISender sender) : HubBase
 public sealed record CreateSoloLobbyRequest(Guid CommandId, Guid PlayerId, Guid HeroId);
 
 public sealed record StartSessionRequest(Guid CommandId, Guid PlayerId, Guid SessionId);
+
+public sealed record ChangeSessionHeroRequest(Guid CommandId, Guid PlayerId, Guid SessionId, Guid HeroId);
 
 public sealed record SessionSnapshotRequest(Guid PlayerId, Guid SessionId);
 

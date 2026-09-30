@@ -14,6 +14,8 @@ public interface IGameSessionRepository
     );
     Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken);
     void Add(GameSession session);
+    void RemoveMember(GameSessionMember member);
+    void AddMember(GameSessionMember member);
     void AddTransition(GameSessionTransition transition);
     void AddIdempotencyKey(IdempotencyKey idempotencyKey);
 }
