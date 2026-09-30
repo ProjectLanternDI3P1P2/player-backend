@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Player.Application.Features.HeroUseCase.CreateHero;
+using Player.Application.Features.HeroUseCase.DeselectHero;
 using Player.Application.Features.HeroUseCase.GetHeroSheet;
 using Player.Application.Features.HeroUseCase.ListHeroes;
 using Player.Application.Features.HeroUseCase.SelectHero;
@@ -66,6 +67,17 @@ public sealed class HeroesController(ISender sender) : ControllerBase
     )
     {
         await sender.Send(new SelectHeroCommand(playerId, heroId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{heroId:guid}/selection")]
+    public async Task<IActionResult> DeselectAsync(
+        Guid playerId,
+        Guid heroId,
+        CancellationToken cancellationToken
+    )
+    {
+        await sender.Send(new DeselectHeroCommand(playerId, heroId), cancellationToken);
         return NoContent();
     }
 }
