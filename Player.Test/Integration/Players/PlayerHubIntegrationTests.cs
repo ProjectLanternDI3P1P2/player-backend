@@ -13,8 +13,8 @@ namespace Player.Test.Integration.Players;
 public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
 {
     private const char RecordSeparator = '\u001e';
-    private const string SignalRHeroClassCode = "signalr-mage";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private readonly Queue<JsonDocument> receivedMessages = new();
 
     [Fact]
     public async Task SignalRNegotiate_Preflight_AllowsConfiguredBrowserOrigin()
@@ -25,12 +25,10 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         );
         request.Headers.Add("Origin", "http://localhost:3000");
         request.Headers.Add("Access-Control-Request-Method", "POST");
-
         HttpResponseMessage response = await fixture.HttpClient.SendAsync(
             request,
             TestContext.Current.CancellationToken
         );
-
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         response
             .Headers.GetValues("Access-Control-Allow-Origin")
@@ -39,96 +37,162 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
     }
 
     [Fact]
-    public async Task CreateSession_OverSignalR_AcknowledgesAndBroadcastsTheAuthoritativeSnapshot()
+    public async Task LobbyLifecycle_OverSignalR_CreatesLobbyThenStartsTheDungeonRun()
     {
         Guid playerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
         Guid dungeonRunId = Guid.NewGuid();
-        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId));
+        string heroClassCode = HeroClassCode(heroId);
+        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId, heroClassCode));
+        using WebSocket socket = await ConnectAsync();
+
+        JsonElement lobby = await InvokeAndReadBroadcastAsync(
+            socket,
+            "create-lobby",
+            "CreateSoloLobby",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                heroId,
+            }
+        );
+        lobby.GetProperty("state").GetString().Should().Be("Lobby");
+        lobby.GetProperty("dungeonRunId").ValueKind.Should().Be(JsonValueKind.Null);
+        lobby.GetProperty("creatorPlayerId").GetGuid().Should().Be(playerId);
+        lobby.GetProperty("members").GetArrayLength().Should().Be(1);
+        Guid sessionId = lobby.GetProperty("sessionId").GetGuid();
+
         fixture.SetDungeonClient(
             new StubDungeonClient(new DungeonRun(dungeonRunId, "dungeon-seed"))
         );
+        JsonElement started = await InvokeAndReadBroadcastAsync(
+            socket,
+            "start-session",
+            "StartSession",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                sessionId,
+            }
+        );
+        started.GetProperty("state").GetString().Should().Be("Active");
+        started.GetProperty("dungeonRunId").GetGuid().Should().Be(dungeonRunId);
+    }
 
-        string connectionToken = await NegotiateAsync();
-        using WebSocket socket = await fixture
-            .CreateWebSocketClient()
-            .ConnectAsync(
-                new Uri($"ws://localhost/hubs/player?id={Uri.EscapeDataString(connectionToken)}"),
-                TestContext.Current.CancellationToken
+    [Fact]
+    public async Task ChangeSessionHero_OverSignalR_ReplacesTheLobbyRosterHero()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid firstHeroId = Guid.NewGuid();
+        Guid secondHeroId = Guid.NewGuid();
+        string heroClassCode = HeroClassCode(firstHeroId);
+        await fixture.SeedAsync(async context =>
+        {
+            await SeedHeroAsync(context, playerId, firstHeroId, heroClassCode);
+            context.Heroes.Add(
+                new Hero
+                {
+                    Id = secondHeroId,
+                    PlayerId = playerId,
+                    ClassCode = heroClassCode,
+                    Name = "Morgana",
+                    Level = 1,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                }
             );
-        await SendAsync(socket, new { protocol = "json", version = 1 });
-        using JsonDocument handshake = await ReceiveAsync(socket);
-        handshake.RootElement.TryGetProperty("error", out _).Should().BeFalse();
+        });
+        using WebSocket socket = await ConnectAsync();
+        JsonElement lobby = await InvokeAndReadBroadcastAsync(
+            socket,
+            "create-lobby-for-hero-change",
+            "CreateSoloLobby",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                heroId = firstHeroId,
+            }
+        );
 
-        Guid commandId = Guid.NewGuid();
+        JsonElement changed = await InvokeAndReadBroadcastAsync(
+            socket,
+            "change-lobby-hero",
+            "ChangeSessionHero",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                sessionId = lobby.GetProperty("sessionId").GetGuid(),
+                heroId = secondHeroId,
+            }
+        );
+
+        changed.GetProperty("members").GetArrayLength().Should().Be(1);
+        changed.GetProperty("members")[0].GetProperty("id").GetGuid().Should().Be(secondHeroId);
+    }
+
+    [Fact]
+    public async Task GetSessionSnapshot_OverSignalR_ReturnsTheAuthoritativeLobby()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        string heroClassCode = HeroClassCode(heroId);
+        await fixture.SeedAsync(context => SeedHeroAsync(context, playerId, heroId, heroClassCode));
+        using WebSocket socket = await ConnectAsync();
+        JsonElement lobby = await InvokeAndReadBroadcastAsync(
+            socket,
+            "create-lobby-for-snapshot",
+            "CreateSoloLobby",
+            new
+            {
+                commandId = Guid.NewGuid(),
+                playerId,
+                heroId,
+            }
+        );
         await SendAsync(
             socket,
             new
             {
                 type = 1,
-                invocationId = "create-session",
-                target = "CreateSession",
+                invocationId = "get-session-snapshot",
+                target = "GetSessionSnapshot",
                 arguments = new[]
                 {
-                    new
-                    {
-                        commandId,
-                        playerId,
-                        heroId,
-                    },
+                    new { playerId, sessionId = lobby.GetProperty("sessionId").GetGuid() },
                 },
             }
         );
+        using JsonDocument response = await ReceiveAsync(socket);
 
-        JsonDocument first = await ReceiveAsync(socket);
-        JsonDocument second = await ReceiveAsync(socket);
-        JsonElement stateChanged = new[] { first, second }
-            .Select(message => message.RootElement)
-            .Single(message => message.GetProperty("type").GetInt32() == 1);
-        JsonElement acknowledgement = new[] { first, second }
-            .Select(message => message.RootElement)
-            .Single(message => message.GetProperty("type").GetInt32() == 3);
-
-        JsonElement state = stateChanged.GetProperty("arguments")[0];
-        acknowledgement
-            .GetProperty("result")
+        response
+            .RootElement.GetProperty("result")
             .GetProperty("accepted")
             .GetBoolean()
             .Should()
             .BeTrue();
-        acknowledgement
-            .GetProperty("result")
+        response
+            .RootElement.GetProperty("result")
             .GetProperty("session")
-            .GetProperty("sessionId")
-            .GetGuid()
+            .GetProperty("state")
+            .GetString()
             .Should()
-            .Be(state.GetProperty("sessionId").GetGuid());
-        state.GetProperty("hero").GetProperty("id").GetGuid().Should().Be(heroId);
-        state.GetProperty("state").GetString().Should().Be("Active");
-        state.GetProperty("dungeonRunId").GetGuid().Should().Be(dungeonRunId);
+            .Be("Lobby");
     }
 
     [Fact]
-    public async Task CreateSession_WhenTheHeroDoesNotExist_ReturnsTheGenericCommandRejection()
+    public async Task CreateSoloLobby_WhenTheHeroDoesNotExist_ReturnsTheGenericCommandRejection()
     {
-        string connectionToken = await NegotiateAsync();
-        using WebSocket socket = await fixture
-            .CreateWebSocketClient()
-            .ConnectAsync(
-                new Uri($"ws://localhost/hubs/player?id={Uri.EscapeDataString(connectionToken)}"),
-                TestContext.Current.CancellationToken
-            );
-        await SendAsync(socket, new { protocol = "json", version = 1 });
-        using JsonDocument handshake = await ReceiveAsync(socket);
-        handshake.RootElement.TryGetProperty("error", out _).Should().BeFalse();
-
+        using WebSocket socket = await ConnectAsync();
         await SendAsync(
             socket,
             new
             {
                 type = 1,
                 invocationId = "missing-hero",
-                target = "CreateSession",
+                target = "CreateSoloLobby",
                 arguments = new[]
                 {
                     new
@@ -140,7 +204,6 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
                 },
             }
         );
-
         using JsonDocument rejection = await ReceiveAsync(socket);
         JsonElement result = rejection.RootElement.GetProperty("result");
         result.GetProperty("accepted").GetBoolean().Should().BeFalse();
@@ -150,6 +213,46 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             .GetString()
             .Should()
             .Be("RESOURCE_NOT_FOUND");
+    }
+
+    private async Task<WebSocket> ConnectAsync()
+    {
+        string connectionToken = await NegotiateAsync();
+        WebSocket socket = await fixture
+            .CreateWebSocketClient()
+            .ConnectAsync(
+                new Uri($"ws://localhost/hubs/player?id={Uri.EscapeDataString(connectionToken)}"),
+                TestContext.Current.CancellationToken
+            );
+        await SendAsync(socket, new { protocol = "json", version = 1 });
+        using JsonDocument handshake = await ReceiveAsync(socket);
+        handshake.RootElement.TryGetProperty("error", out _).Should().BeFalse();
+        return socket;
+    }
+
+    private async Task<JsonElement> InvokeAndReadBroadcastAsync(
+        WebSocket socket,
+        string invocationId,
+        string target,
+        object command
+    )
+    {
+        await SendAsync(
+            socket,
+            new
+            {
+                type = 1,
+                invocationId,
+                target,
+                arguments = new[] { command },
+            }
+        );
+        using JsonDocument first = await ReceiveAsync(socket);
+        using JsonDocument second = await ReceiveAsync(socket);
+        JsonDocument broadcast = new[] { first, second }.Single(message =>
+            message.RootElement.GetProperty("type").GetInt32() == 1
+        );
+        return broadcast.RootElement.GetProperty("arguments")[0].Clone();
     }
 
     private async Task<string> NegotiateAsync()
@@ -179,20 +282,32 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         );
     }
 
-    private static async Task<JsonDocument> ReceiveAsync(WebSocket socket)
+    private async Task<JsonDocument> ReceiveAsync(WebSocket socket)
     {
+        if (receivedMessages.TryDequeue(out JsonDocument? buffered))
+            return buffered;
         byte[] buffer = new byte[4096];
         WebSocketReceiveResult received = await socket.ReceiveAsync(
             buffer,
             TestContext.Current.CancellationToken
         );
         received.EndOfMessage.Should().BeTrue();
-        return JsonDocument.Parse(
-            Encoding.UTF8.GetString(buffer, 0, received.Count).TrimEnd(RecordSeparator)
-        );
+        foreach (
+            string payload in Encoding
+                .UTF8.GetString(buffer, 0, received.Count)
+                .Split(RecordSeparator)
+                .Where(payload => !string.IsNullOrWhiteSpace(payload))
+        )
+            receivedMessages.Enqueue(JsonDocument.Parse(payload));
+        return receivedMessages.Dequeue();
     }
 
-    private static Task SeedHeroAsync(PlayerDbContext context, Guid playerId, Guid heroId)
+    private static Task SeedHeroAsync(
+        PlayerDbContext context,
+        Guid playerId,
+        Guid heroId,
+        string heroClassCode
+    )
     {
         context.Players.Add(
             new Player.Domain.Entities.Player
@@ -206,7 +321,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         context.HeroClasses.Add(
             new HeroClass
             {
-                Code = SignalRHeroClassCode,
+                Code = heroClassCode,
                 Label = "Mage",
                 BaseHealth = 45,
             }
@@ -216,7 +331,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             {
                 Id = heroId,
                 PlayerId = playerId,
-                ClassCode = SignalRHeroClassCode,
+                ClassCode = heroClassCode,
                 Name = "Merlin",
                 Level = 1,
                 CreatedAt = DateTimeOffset.UtcNow,
@@ -225,11 +340,14 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
         return Task.CompletedTask;
     }
 
+    private static string HeroClassCode(Guid heroId) => $"signalr-{heroId:N}";
+
     private sealed class StubDungeonClient(DungeonRun run) : IDungeonClient
     {
         public Task<DungeonRun> StartRunAsync(
+            Guid commandId,
             Guid sessionId,
-            Guid heroId,
+            IReadOnlyList<DungeonParticipant> participants,
             CancellationToken cancellationToken
         ) => Task.FromResult(run);
     }

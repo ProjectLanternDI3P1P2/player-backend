@@ -12,8 +12,9 @@ namespace Player.Infrastructure.Grpc.Clients;
 public sealed class MockDungeonGrpcClient : IDungeonClient
 {
     public Task<DungeonRun> StartRunAsync(
+        Guid commandId,
         Guid sessionId,
-        Guid heroId,
+        IReadOnlyList<DungeonParticipant> participants,
         CancellationToken cancellationToken
     )
     {
