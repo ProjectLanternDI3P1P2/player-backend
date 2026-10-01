@@ -19,42 +19,19 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
     )
     {
         string fingerprint = Fingerprint(request.SessionId, request.HeroId);
-        IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
-            request.IdempotencyKey,
-            cancellationToken
-        );
-        if (existing is not null)
-            return await GameSessionIdempotency.GetExistingAsync(
-                repository,
-                existing,
-                request.PlayerId,
-                Scope,
-                fingerprint,
-                cancellationToken
-            );
-
-        GameSession session = await LobbyAccess.GetCreatorLobbyForUpdateAsync(
+        LobbyCommandPreparation preparation = await LobbyCommandPreparation.CreateAsync(
             repository,
-            request.SessionId,
+            request.IdempotencyKey,
             request.PlayerId,
+            request.SessionId,
+            Scope,
+            fingerprint,
             "Only the lobby creator can change the solo hero.",
             "The roster is locked after the run starts.",
             cancellationToken
         );
-
-        existing = await repository.GetIdempotencyKeyAsync(
-            request.IdempotencyKey,
-            cancellationToken
-        );
-        if (existing is not null)
-            return await GameSessionIdempotency.GetExistingAsync(
-                repository,
-                existing,
-                request.PlayerId,
-                Scope,
-                fingerprint,
-                cancellationToken
-            );
+        if (preparation.ExistingSnapshot is not null) return preparation.ExistingSnapshot;
+        GameSession session = preparation.Lobby!;
 
         GameSessionMember? currentMember = session.Members.SingleOrDefault(member =>
             member.MemberStatus == "Active"
