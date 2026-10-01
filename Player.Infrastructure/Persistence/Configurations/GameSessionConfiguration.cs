@@ -10,6 +10,7 @@ public sealed class GameSessionConfiguration : IEntityTypeConfiguration<GameSess
     {
         builder.ToTable("game_session");
         builder.Property(x => x.Id).HasColumnName("id");
+        builder.Property(x => x.CreatorPlayerId).HasColumnName("creator_player_id");
         builder.Property(x => x.MatchmakingGroupId).HasColumnName("matchmaking_group_id");
         builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32);
         builder.Property(x => x.Mode).HasColumnName("mode").HasMaxLength(32);
@@ -24,6 +25,7 @@ public sealed class GameSessionConfiguration : IEntityTypeConfiguration<GameSess
         builder.Property(x => x.LastActiveAt).HasColumnName("last_active_at");
         builder.Property(x => x.EndedAt).HasColumnName("ended_at");
         builder.HasIndex(x => x.MatchmakingGroupId).IsUnique();
+        builder.HasIndex(x => x.CreatorPlayerId);
         builder
             .HasOne(x => x.MatchmakingGroup)
             .WithOne(x => x.GameSession)

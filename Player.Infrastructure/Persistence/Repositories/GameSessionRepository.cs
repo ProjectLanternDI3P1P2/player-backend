@@ -17,6 +17,16 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
                 .ThenInclude(x => x.Hero)
             .SingleOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
 
+    public Task<GameSession?> GetByIdForUpdateAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken
+    ) =>
+        dbContext
+            .GameSessions.FromSql($"SELECT * FROM game_session WHERE id = {sessionId} FOR UPDATE")
+            .Include(x => x.Members)
+                .ThenInclude(x => x.Hero)
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<Hero?> GetActiveHeroForUpdateAsync(
         Guid heroId,
         Guid playerId,
@@ -28,16 +38,24 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
             )
             .SingleOrDefaultAsync(cancellationToken);
 
-    public Task<bool> HasActiveSessionAsync(Guid heroId, CancellationToken cancellationToken) =>
+    public Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken) =>
         dbContext.GameSessionMembers.AnyAsync(
             member =>
                 member.HeroId == heroId
                 && member.MemberStatus == "Active"
-                && member.GameSession.Status == "Active",
+                && (member.GameSession.Status == "Lobby" || member.GameSession.Status == "Active"),
             cancellationToken
         );
 
     public void Add(GameSession session) => dbContext.GameSessions.Add(session);
+
+    public void RemoveMember(GameSessionMember member) =>
+        dbContext.GameSessionMembers.Remove(member);
+
+    public void AddMember(GameSessionMember member) => dbContext.GameSessionMembers.Add(member);
+
+    public void AddTransition(GameSessionTransition transition) =>
+        dbContext.GameSessionTransitions.Add(transition);
 
     public void AddIdempotencyKey(IdempotencyKey idempotencyKey) =>
         dbContext.IdempotencyKeys.Add(idempotencyKey);

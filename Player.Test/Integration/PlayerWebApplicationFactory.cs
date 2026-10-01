@@ -29,6 +29,7 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
                 {
                     ["ConnectionStrings:DefaultConnection"] = connectionString,
                     ["RabbitMq:Enabled"] = "false",
+                    ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
                 }
             )
         );
@@ -49,8 +50,9 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
     private sealed class UnavailableDungeonClient : IDungeonClient
     {
         public Task<DungeonRun> StartRunAsync(
+            Guid commandId,
             Guid sessionId,
-            Guid heroId,
+            IReadOnlyList<DungeonParticipant> participants,
             CancellationToken cancellationToken
         ) => Task.FromException<DungeonRun>(new HttpRequestException());
     }
@@ -58,9 +60,10 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
     private sealed class DelegatingDungeonClient(Func<IDungeonClient> current) : IDungeonClient
     {
         public Task<DungeonRun> StartRunAsync(
+            Guid commandId,
             Guid sessionId,
-            Guid heroId,
+            IReadOnlyList<DungeonParticipant> participants,
             CancellationToken cancellationToken
-        ) => current().StartRunAsync(sessionId, heroId, cancellationToken);
+        ) => current().StartRunAsync(commandId, sessionId, participants, cancellationToken);
     }
 }

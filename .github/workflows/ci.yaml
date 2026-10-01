@@ -14,9 +14,8 @@ on:
   push:
     branches:
       - main
-      # Enable together with the matching line in cd.yaml when the development
-      # environment exists. A merge into dev will then run CI again on the
-      # resulting commit while CD publishes its dev-tagged image separately.
+      # Enable if CI should also run on the merged dev commit. The CD image
+      # publication for dev is a manual workflow dispatch.
       # - dev
   workflow_dispatch:
 
