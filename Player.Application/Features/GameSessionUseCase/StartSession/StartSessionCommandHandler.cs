@@ -34,7 +34,8 @@ public sealed class StartSessionCommandHandler(
             "This session is no longer ready to start.",
             cancellationToken
         );
-        if (preparation.ExistingSnapshot is not null) return preparation.ExistingSnapshot;
+        if (preparation.ExistingSnapshot is not null)
+            return preparation.ExistingSnapshot;
         GameSession session = preparation.Lobby!;
 
         IReadOnlyList<DungeonParticipant> participants = session

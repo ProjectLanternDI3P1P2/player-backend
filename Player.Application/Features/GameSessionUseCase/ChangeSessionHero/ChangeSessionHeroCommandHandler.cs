@@ -30,7 +30,8 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
             "The roster is locked after the run starts.",
             cancellationToken
         );
-        if (preparation.ExistingSnapshot is not null) return preparation.ExistingSnapshot;
+        if (preparation.ExistingSnapshot is not null)
+            return preparation.ExistingSnapshot;
         GameSession session = preparation.Lobby!;
 
         GameSessionMember? currentMember = session.Members.SingleOrDefault(member =>
