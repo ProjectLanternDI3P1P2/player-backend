@@ -99,7 +99,8 @@ public sealed class StartSessionCommandHandler(
         Exception exception,
         CancellationToken cancellationToken
     ) =>
-        exception is HttpRequestException
+        exception is DungeonUnavailableException
+        || exception is HttpRequestException
         || exception is TimeoutException
         || (exception is OperationCanceledException && !cancellationToken.IsCancellationRequested);
 

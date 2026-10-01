@@ -23,6 +23,15 @@ user interface.
 
 ## Commands
 
+`Dungeon.Contracts` is restored from the organisation's GitHub Packages feed, declared
+in [nuget.config](./nuget.config). Export a GitHub user name and a personal access
+token (classic) scoped to `read:packages` once, for example in your shell profile:
+
+```bash
+export GITHUB_PACKAGES_USER=<github-user>
+export GITHUB_PACKAGES_TOKEN=<token>
+```
+
 ```powershell
 dotnet tool restore
 dotnet restore Player.Presentation.slnx
@@ -46,10 +55,25 @@ Concrete gRPC service implementations in `Presentation/Grpc/Services` are mapped
 automatically at startup. A new service only needs to inherit from its generated
 contract base class; no additional `MapGrpcService<T>()` call is needed.
 
-`Infrastructure/Grpc/Clients/PlayerGrpcClient` shows the consumer-side pattern.
-Handlers depend on the `Application/Ports/IPlayerClient` port and its application
+## Calling Dungeon
+
+Starting a game session creates its dungeon run in Dungeon (ADR-GLOB-011) through
+`DungeonRunService/CreateDungeonRun`, from the released `Dungeon.Contracts` package.
+`Infrastructure/Grpc/Clients/DungeonGrpcClient` is the consumer-side adapter.
+Handlers depend on the `Application/Ports/IDungeonClient` port and its application
 model, never on Protobuf or gRPC types. The adapter uses the generated typed client,
-maps its response, and applies the configurable `Grpc:Player:TimeoutSeconds` deadline.
+maps its response, and applies the configurable `Grpc:Dungeon:TimeoutSeconds`
+deadline.
+
+| Setting | Default | |
+| --- | --- | --- |
+| `Grpc:Dungeon:Address` | `http://localhost:8081` | Dungeon's internal gRPC endpoint (`Grpc__Dungeon__Address`). |
+| `Grpc:Dungeon:TimeoutSeconds` | `2` | Deadline of the call. |
+
+Dungeon creates at most one run per game session, so starting a session again is
+safe. When Dungeon is down or misses the deadline (`UNAVAILABLE`,
+`DEADLINE_EXCEEDED`), the adapter raises `DungeonUnavailableException`: the session
+stays in its lobby and the creator can start it again.
 
 `Player.Contracts` has an independent release line. A change outside
 `Player.Contracts/` never releases the package. When a contract release is made,
@@ -73,6 +97,10 @@ on their own workstation with a personal access token (classic) scoped to
 ```bash
 docker compose up -d --build
 ```
+
+The image build restores `Dungeon.Contracts` too: it reads `GITHUB_PACKAGES_USER`
+and `GITHUB_PACKAGES_TOKEN` from your environment, the token as a build secret that
+never reaches an image layer.
 
 The API listens on <http://localhost:8080>, Postgres on host port 5433, and the
 RabbitMQ management UI on <http://localhost:15672> (`player` / `player`). Because

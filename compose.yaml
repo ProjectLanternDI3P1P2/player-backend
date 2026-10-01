@@ -18,7 +18,14 @@ services:
       retries: 10
 
   api:
-    build: .
+    build:
+      context: .
+      # Dungeon.Contracts is restored from GitHub Packages: export GITHUB_PACKAGES_USER and
+      # GITHUB_PACKAGES_TOKEN (read:packages) before building.
+      args:
+        GITHUB_PACKAGES_USER: ${GITHUB_PACKAGES_USER:-}
+      secrets:
+        - github_packages_token
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,3 +59,7 @@ services:
 
 volumes:
   postgres-data:
+
+secrets:
+  github_packages_token:
+    environment: GITHUB_PACKAGES_TOKEN

@@ -126,8 +126,11 @@ public sealed class GameSessionHandlersTests
         await action.Should().ThrowAsync<ConflictException>();
     }
 
-    [Fact]
-    public async Task StartSession_WhenDungeonIsUnavailable_LeavesTheLobbyRetryable()
+    [Theory]
+    [InlineData(nameof(HttpRequestException))]
+    [InlineData(nameof(TimeoutException))]
+    [InlineData(nameof(DungeonUnavailableException))]
+    public async Task StartSession_WhenDungeonIsUnavailable_LeavesTheLobbyRetryable(string outage)
     {
         Guid playerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
@@ -147,7 +150,7 @@ public sealed class GameSessionHandlersTests
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ThrowsAsync(new HttpRequestException());
+            .ThrowsAsync(Outage(outage));
         var handler = new StartSessionCommandHandler(
             repository.Object,
             dungeon.Object,
@@ -298,4 +301,15 @@ public sealed class GameSessionHandlersTests
     {
         public DateTimeOffset UtcNow { get; } = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     }
+
+    private static Exception Outage(string name) =>
+        name switch
+        {
+            nameof(TimeoutException) => new TimeoutException(),
+            nameof(DungeonUnavailableException) => new DungeonUnavailableException(
+                "Dungeon is down.",
+                new HttpRequestException()
+            ),
+            _ => new HttpRequestException(),
+        };
 }
