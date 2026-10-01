@@ -10,7 +10,7 @@ on:
       - main
       # Enable this line with the dev environment. It will publish :dev and
       # :dev-<sha> in the same Docker Hub repository, not a second repository.
-      # - dev
+      - dev
     tags: ["v*"]
   workflow_dispatch:
 
