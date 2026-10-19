@@ -47,6 +47,10 @@ $env:NuGetPackageSourceCredentials_github = "Username=<github-login>;Password=<p
 The token needs the `read:packages` scope. The `github` suffix matches the source
 name in `NuGet.config`; never commit the token or add it to a tracked `.env` file.
 
+`docker compose up --build` uses the `local-runtime` target instead: it packages
+`../dungeon-backend/Dungeon.Contracts` locally and needs neither this token nor a
+published package. The standard Dockerfile target remains the production path.
+
 ## Internal gRPC contract
 
 `Player.Contracts` owns the versioned `player_v1.proto` contract and the

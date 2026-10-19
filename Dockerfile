@@ -1,8 +1,8 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.10
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY NuGet.config ./
 
+COPY NuGet.config ./
 COPY Player.Presentation.slnx ./
 COPY Player.Contracts/Player.Contracts.csproj Player.Contracts/
 COPY Player.Domain/Player.Domain.csproj Player.Domain/
