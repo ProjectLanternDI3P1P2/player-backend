@@ -1,16 +1,42 @@
 # Local stack.
+#
+# Passwords come from .env: copy .env.example to .env and fill it in. Nothing
+# sensitive is committed, which also clears the Sonar finding.
+
+# Log rotation, so containers cannot fill the disk (3 files of 10 MB at most).
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Shared hardening: no process can gain privileges (setuid binaries, etc.)
+# after startup.
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  logging: *logging
+
 services:
   postgres:
+    <<: *hardening
     image: postgres:17-alpine
     environment:
       POSTGRES_USER: player
       POSTGRES_DB: player
-      # Sonar flags a committed password. No auth, so loopback-only.
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    # Only what the image entrypoint needs: chown/chmod the data directory, then
+    # drop to the postgres user. Everything else is removed.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U player -d player"]
       interval: 5s
@@ -18,6 +44,7 @@ services:
       retries: 10
 
   api:
+    <<: *hardening
     build: .
     depends_on:
       postgres:
@@ -26,24 +53,48 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=player;Username=player"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=player;Username=player;Password=${POSTGRES_PASSWORD}"
       RabbitMq__Enabled: "true"
       RabbitMq__HostName: rabbitmq
       RabbitMq__UserName: player
-      RabbitMq__Password: player
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      # Readable text logs locally. The image logs JSON by default: remove this
+      # line to see the exact production logs.
+      Logging__Console__FormatterName: simple
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
       # Internal gRPC endpoint. Do not expose this port in production Kubernetes ingress.
       - "127.0.0.1:8081:8081"
+    # Same constraints as the Kubernetes deployment: read-only root filesystem,
+    # no Linux capabilities, non-root user.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 256
 
   rabbitmq:
+    <<: *hardening
     image: rabbitmq:4-management-alpine
     environment:
       RABBITMQ_DEFAULT_USER: player
-      RABBITMQ_DEFAULT_PASS: player
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
     ports:
       - "127.0.0.1:5672:5672"
       - "127.0.0.1:15672:15672"
+    # The entrypoint chowns the data directory, then drops to the rabbitmq user.
+    # Everything else is removed.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 5s
