@@ -3,6 +3,7 @@ using Moq;
 using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.ListHeroes;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Repositories;
 
 namespace Player.Test.Features.HeroUseCase;
@@ -37,10 +38,10 @@ public sealed class ListHeroesQueryHandlerTests
                         "warrior",
                         1,
                         72,
-                        false,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
                         false,
-                        HeroAppearance.Default
+                        HeroAppearance.Default,
+                        null
                     ),
                     new HeroSummary(
                         result[1].Id,
@@ -48,15 +49,18 @@ public sealed class ListHeroesQueryHandlerTests
                         "shaman",
                         1,
                         50,
-                        true,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
                         false,
-                        HeroAppearance.Default
+                        HeroAppearance.Default,
+                        new HeroActiveSession(EngagedSessionId, "Active")
                     ),
                 ],
                 options => options.WithStrictOrdering()
             );
+        result.Select(hero => hero.IsEngagedInActiveSession).Should().Equal(false, true);
     }
+
+    private static readonly Guid EngagedSessionId = Guid.NewGuid();
 
     private static Hero CreateHero(string name, int baseHealth, int endurance, bool engaged) =>
         new()
@@ -69,7 +73,17 @@ public sealed class ListHeroesQueryHandlerTests
             Endurance = endurance,
             HeroClass = new HeroClass { BaseHealth = baseHealth },
             SessionMembers = engaged
-                ? [new GameSessionMember { GameSession = new GameSession { Status = "Started" } }]
+                ?
+                [
+                    new GameSessionMember
+                    {
+                        GameSession = new GameSession
+                        {
+                            Id = EngagedSessionId,
+                            Status = GameSessionStatus.Active,
+                        },
+                    },
+                ]
                 : [],
         };
 }

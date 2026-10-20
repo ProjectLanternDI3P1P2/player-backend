@@ -6,6 +6,7 @@ using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Application.Features.GameSessionUseCase.StartSession;
 using Player.Application.Ports;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -23,7 +24,7 @@ public sealed class GameSessionHandlersTests
         var handler = new CreateSoloLobbyCommandHandler(repository.Object, new FixedClock());
 
         GameSessionSnapshot result = await handler.Handle(
-            new CreateSoloLobbyCommand(playerId, heroId, Guid.NewGuid()),
+            new CreateSoloLobbyCommand(playerId, heroId, null, Guid.NewGuid()),
             TestContext.Current.CancellationToken
         );
 
@@ -35,12 +36,28 @@ public sealed class GameSessionHandlersTests
             x =>
                 x.Add(
                     It.Is<GameSession>(session =>
-                        session.Status == "Lobby"
-                        && session.Transitions.Single().TargetStatus == "Lobby"
+                        session.Status == GameSessionStatus.Lobby
+                        && session.Transitions.Single().TargetStatus == GameSessionStatus.Lobby
                     )
                 ),
             Times.Once
         );
+    }
+
+    [Fact]
+    public async Task CreateSoloLobby_WithAReplaySeed_StoresTheNormalizedSeed()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, heroId);
+        var handler = new CreateSoloLobbyCommandHandler(repository.Object, new FixedClock());
+
+        GameSessionSnapshot result = await handler.Handle(
+            new CreateSoloLobbyCommand(playerId, heroId, "  0kx4-m2t9-qz7pa  ", Guid.NewGuid()),
+            TestContext.Current.CancellationToken
+        );
+
+        result.DungeonSeed.Should().Be("0KX4-M2T9-QZ7PA");
     }
 
     [Fact]
@@ -50,7 +67,7 @@ public sealed class GameSessionHandlersTests
         Guid heroId = Guid.NewGuid();
         Guid sessionId = Guid.NewGuid();
         var repository = CreateRepository(playerId, heroId);
-        GameSession session = Lobby(sessionId, playerId, heroId);
+        GameSession session = Lobby(sessionId, playerId, heroId, "0KX4-M2T9-QZ7PA");
         repository
             .Setup(x => x.GetByIdForUpdateAsync(sessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(session);
@@ -63,6 +80,7 @@ public sealed class GameSessionHandlersTests
                     It.Is<IReadOnlyList<DungeonParticipant>>(party =>
                         party.Single().HeroId == heroId
                     ),
+                    "0KX4-M2T9-QZ7PA",
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -84,7 +102,8 @@ public sealed class GameSessionHandlersTests
             x =>
                 x.AddTransition(
                     It.Is<GameSessionTransition>(transition =>
-                        transition.SourceStatus == "Lobby" && transition.TargetStatus == "Active"
+                        transition.SourceStatus == GameSessionStatus.Lobby
+                        && transition.TargetStatus == GameSessionStatus.Active
                     )
                 ),
             Times.Once
@@ -95,6 +114,7 @@ public sealed class GameSessionHandlersTests
                     It.IsAny<Guid>(),
                     sessionId,
                     It.IsAny<IReadOnlyList<DungeonParticipant>>(),
+                    "0KX4-M2T9-QZ7PA",
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -144,6 +164,7 @@ public sealed class GameSessionHandlersTests
                     It.IsAny<Guid>(),
                     sessionId,
                     It.IsAny<IReadOnlyList<DungeonParticipant>>(),
+                    It.IsAny<string?>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -161,7 +182,7 @@ public sealed class GameSessionHandlersTests
             );
 
         await action.Should().ThrowAsync<InvalidOperationException>();
-        session.Status.Should().Be("Lobby");
+        session.Status.Should().Be(GameSessionStatus.Lobby);
         session.DungeonRunId.Should().BeNull();
     }
 
@@ -265,19 +286,25 @@ public sealed class GameSessionHandlersTests
         return repository;
     }
 
-    private static GameSession Lobby(Guid sessionId, Guid playerId, Guid heroId) =>
+    private static GameSession Lobby(
+        Guid sessionId,
+        Guid playerId,
+        Guid heroId,
+        string? dungeonSeed = null
+    ) =>
         new()
         {
             Id = sessionId,
             CreatorPlayerId = playerId,
-            Status = "Lobby",
+            Status = GameSessionStatus.Lobby,
             Mode = "Solo",
+            DungeonSeed = dungeonSeed,
             Members =
             [
                 new GameSessionMember
                 {
                     HeroId = heroId,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     Hero = new Hero
                     {
                         Id = heroId,
@@ -290,7 +317,11 @@ public sealed class GameSessionHandlersTests
             ],
             Transitions =
             [
-                new GameSessionTransition { SourceStatus = "None", TargetStatus = "Lobby" },
+                new GameSessionTransition
+                {
+                    SourceStatus = GameSessionStatus.None,
+                    TargetStatus = GameSessionStatus.Lobby,
+                },
             ],
         };
 

@@ -12,7 +12,11 @@ public sealed class GameSessionMemberConfiguration : IEntityTypeConfiguration<Ga
         builder.HasKey(x => new { x.SessionId, x.HeroId });
         builder.Property(x => x.SessionId).HasColumnName("session_id");
         builder.Property(x => x.HeroId).HasColumnName("hero_id");
-        builder.Property(x => x.MemberStatus).HasColumnName("member_status").HasMaxLength(32);
+        builder
+            .Property(x => x.MemberStatus)
+            .HasConversion<string>()
+            .HasColumnName("member_status")
+            .HasMaxLength(32);
         builder.Property(x => x.JoinedAt).HasColumnName("joined_at");
         builder.Property(x => x.LeftAt).HasColumnName("left_at");
         builder

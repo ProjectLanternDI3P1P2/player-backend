@@ -53,6 +53,7 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
             Guid commandId,
             Guid sessionId,
             IReadOnlyList<DungeonParticipant> participants,
+            string? seed,
             CancellationToken cancellationToken
         ) => Task.FromException<DungeonRun>(new HttpRequestException());
     }
@@ -63,7 +64,8 @@ public sealed class PlayerWebApplicationFactory(string connectionString)
             Guid commandId,
             Guid sessionId,
             IReadOnlyList<DungeonParticipant> participants,
+            string? seed,
             CancellationToken cancellationToken
-        ) => current().StartRunAsync(commandId, sessionId, participants, cancellationToken);
+        ) => current().StartRunAsync(commandId, sessionId, participants, seed, cancellationToken);
     }
 }

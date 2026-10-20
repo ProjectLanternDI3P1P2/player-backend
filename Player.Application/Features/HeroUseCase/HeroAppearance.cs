@@ -13,12 +13,17 @@ public sealed record HeroAppearance(int SkinTone, string HairStyle, int? HairCol
             HeroAppearanceCatalog.DefaultHairColor
         );
 
-    public static HeroAppearance From(Hero hero) => new(hero.SkinTone, hero.HairStyle, hero.HairColor);
+    public static HeroAppearance From(Hero hero) =>
+        new(hero.SkinTone, hero.HairStyle, hero.HairColor);
 
     public bool IsSupported =>
         HeroAppearanceCatalog.IsSkinToneSupported(SkinTone)
         && HeroAppearanceCatalog.IsHairStyleSupported(HairStyle)
         && HeroAppearanceCatalog.IsHairColorSupported(HairStyle, HairColor);
 
-    public HeroAppearance Normalize() => this with { HairStyle = HairStyle.Trim().ToLowerInvariant() };
+    public HeroAppearance Normalize() =>
+        this with
+        {
+            HairStyle = HairStyle.Trim().ToLowerInvariant(),
+        };
 }

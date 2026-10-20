@@ -90,6 +90,7 @@ public sealed class CreateHeroCommandValidatorTests
                 && error.ErrorMessage == "Hero class must be Warrior, Shaman, or Mage."
             );
     }
+
     [Theory]
     [InlineData(1, "bob1", 1)]
     [InlineData(10, "dap1", 13)]

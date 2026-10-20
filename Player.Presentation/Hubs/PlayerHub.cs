@@ -13,7 +13,12 @@ public sealed class PlayerHub(ISender sender) : HubBase
     public async Task<SessionCommandAcknowledgement> CreateSoloLobby(CreateSoloLobbyRequest command)
     {
         GameSessionSnapshot session = await sender.Send<GameSessionSnapshot>(
-            new CreateSoloLobbyCommand(command.PlayerId, command.HeroId, command.CommandId),
+            new CreateSoloLobbyCommand(
+                command.PlayerId,
+                command.HeroId,
+                command.DungeonSeed,
+                command.CommandId
+            ),
             Context.ConnectionAborted
         );
         await PublishSessionAsync(session);
@@ -70,10 +75,15 @@ public sealed class PlayerHub(ISender sender) : HubBase
         );
     }
 
-    private static string GroupName(Guid sessionId) => $"session:{sessionId}";
+    internal static string GroupName(Guid sessionId) => $"session:{sessionId}";
 }
 
-public sealed record CreateSoloLobbyRequest(Guid CommandId, Guid PlayerId, Guid HeroId);
+public sealed record CreateSoloLobbyRequest(
+    Guid CommandId,
+    Guid PlayerId,
+    Guid HeroId,
+    string? DungeonSeed
+);
 
 public sealed record StartSessionRequest(Guid CommandId, Guid PlayerId, Guid SessionId);
 

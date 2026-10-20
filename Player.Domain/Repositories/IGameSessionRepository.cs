@@ -12,6 +12,10 @@ public interface IGameSessionRepository
         Guid playerId,
         CancellationToken cancellationToken
     );
+    Task<IReadOnlyList<GameSession>> ListOpenSessionsForHeroForUpdateAsync(
+        Guid heroId,
+        CancellationToken cancellationToken
+    );
     Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken);
     void Add(GameSession session);
     void RemoveMember(GameSessionMember member);

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Player.Domain.Entities;
 using Player.Infrastructure.Persistence;
 
@@ -173,10 +174,13 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         heroes!
             .Select(hero => hero.Appearance)
             .Should()
-            .BeEquivalentTo([new AppearanceResponse(6, "dap1", 9), new AppearanceResponse(2, "bald", null)]);
+            .BeEquivalentTo([
+                new AppearanceResponse(6, "dap1", 9),
+                new AppearanceResponse(2, "bald", null),
+            ]);
     }
 
-    private static Task SeedMageAsync(PlayerDbContext context, Guid playerId)
+    private static async Task SeedMageAsync(PlayerDbContext context, Guid playerId)
     {
         context.Players.Add(
             new Player.Domain.Entities.Player
@@ -187,25 +191,26 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
                 CreatedAt = DateTimeOffset.UtcNow,
             }
         );
-        context.HeroClasses.Add(
-            new HeroClass
-            {
-                Code = "mage",
-                Label = "Mage",
-                BaseHealth = 45,
-            }
-        );
-        context.Skills.Add(
-            new Skill
-            {
-                Code = "mage-bolt",
-                ClassCode = "mage",
-                Label = "Arcane Bolt",
-                RequiredLevel = 1,
-                TargetingType = "SingleEnemy",
-            }
-        );
-        return Task.CompletedTask;
+        if (!await context.HeroClasses.AnyAsync(heroClass => heroClass.Code == "mage"))
+            context.HeroClasses.Add(
+                new HeroClass
+                {
+                    Code = "mage",
+                    Label = "Mage",
+                    BaseHealth = 45,
+                }
+            );
+        if (!await context.Skills.AnyAsync(skill => skill.Code == "mage-bolt"))
+            context.Skills.Add(
+                new Skill
+                {
+                    Code = "mage-bolt",
+                    ClassCode = "mage",
+                    Label = "Arcane Bolt",
+                    RequiredLevel = 1,
+                    TargetingType = "SingleEnemy",
+                }
+            );
     }
 
     private sealed record CreateHeroRequest(string Name, string ClassCode, Guid IdempotencyKey);

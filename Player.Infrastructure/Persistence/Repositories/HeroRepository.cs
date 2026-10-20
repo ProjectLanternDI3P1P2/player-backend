@@ -61,6 +61,29 @@ public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
             .Where(x => x.Id == heroId && x.PlayerId == playerId && !x.IsDeleted)
             .SingleOrDefaultAsync(cancellationToken);
 
+    /// <summary>Includes soft-deleted heroes so that a replayed deletion stays idempotent.</summary>
+    public Task<Hero?> GetByIdAndPlayerIdForUpdateAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    ) =>
+        dbContext
+            .Heroes.FromSql(
+                $"SELECT * FROM hero WHERE id = {heroId} AND player_id = {playerId} FOR UPDATE"
+            )
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public Task<DateTimeOffset?> GetDeletedAtAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    ) =>
+        dbContext
+            .Heroes.AsNoTracking()
+            .Where(x => x.Id == heroId && x.PlayerId == playerId && x.IsDeleted)
+            .Select(x => (DateTimeOffset?)(x.DeletedAt ?? x.CreatedAt))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public Task<PlayerEntity?> GetPlayerForUpdateAsync(
         Guid playerId,
         CancellationToken cancellationToken

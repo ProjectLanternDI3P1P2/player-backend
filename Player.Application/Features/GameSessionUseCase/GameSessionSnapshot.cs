@@ -18,7 +18,7 @@ public sealed record GameSessionSnapshot(
         new(
             session.Id,
             session.CreatorPlayerId,
-            session.Status,
+            session.Status.ToString(),
             session.Mode,
             session.Members.Select(member => SessionHero.From(member.Hero)).ToArray(),
             session.DungeonRunId,

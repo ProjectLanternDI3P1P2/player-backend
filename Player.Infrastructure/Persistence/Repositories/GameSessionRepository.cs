@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Repositories;
 
 namespace Player.Infrastructure.Persistence.Repositories;
@@ -38,12 +39,41 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
             )
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<GameSession>> ListOpenSessionsForHeroForUpdateAsync(
+        Guid heroId,
+        CancellationToken cancellationToken
+    )
+    {
+        string lobby = GameSessionStatus.Lobby.ToString();
+        string active = GameSessionStatus.Active.ToString();
+        string activeMember = GameSessionMemberStatus.Active.ToString();
+        return await dbContext
+            .GameSessions.FromSql(
+                $"""
+                SELECT * FROM game_session
+                WHERE status IN ({lobby}, {active})
+                  AND id IN (
+                      SELECT session_id FROM game_session_member
+                      WHERE hero_id = {heroId} AND member_status = {activeMember}
+                  )
+                ORDER BY id
+                FOR UPDATE
+                """
+            )
+            .Include(x => x.Members)
+                .ThenInclude(x => x.Hero)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken) =>
         dbContext.GameSessionMembers.AnyAsync(
             member =>
                 member.HeroId == heroId
-                && member.MemberStatus == "Active"
-                && (member.GameSession.Status == "Lobby" || member.GameSession.Status == "Active"),
+                && member.MemberStatus == GameSessionMemberStatus.Active
+                && (
+                    member.GameSession.Status == GameSessionStatus.Lobby
+                    || member.GameSession.Status == GameSessionStatus.Active
+                ),
             cancellationToken
         );
 

@@ -12,8 +12,16 @@ public sealed class GameSessionTransitionConfiguration
         builder.ToTable("game_session_transition");
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.SessionId).HasColumnName("session_id");
-        builder.Property(x => x.SourceStatus).HasColumnName("source_status").HasMaxLength(32);
-        builder.Property(x => x.TargetStatus).HasColumnName("target_status").HasMaxLength(32);
+        builder
+            .Property(x => x.SourceStatus)
+            .HasConversion<string>()
+            .HasColumnName("source_status")
+            .HasMaxLength(32);
+        builder
+            .Property(x => x.TargetStatus)
+            .HasConversion<string>()
+            .HasColumnName("target_status")
+            .HasMaxLength(32);
         builder.Property(x => x.Cause).HasColumnName("cause").HasMaxLength(100);
         builder.Property(x => x.Actor).HasColumnName("actor").HasMaxLength(100);
         builder.Property(x => x.OccurredAt).HasColumnName("occurred_at");
