@@ -149,11 +149,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         HttpResponseMessage response = await deletion;
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        (
-            await response.Content.ReadFromJsonAsync<DeleteWithSessionsResponse>(
-                cancellationToken
-            )
-        )!
+        (await response.Content.ReadFromJsonAsync<DeleteWithSessionsResponse>(cancellationToken))!
             .ClosedSessionIds.Should()
             .Equal(sessionId);
         await fixture.AssertAsync(context =>
