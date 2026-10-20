@@ -1,5 +1,6 @@
 using MediatR;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Repositories;
 
 namespace Player.Application.Features.HeroUseCase.ListHeroes;
@@ -32,7 +33,7 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                 member.LeftAt is null && member.GameSession.EndedAt is null
             )
             .Select(member => member.GameSession)
-            .OrderByDescending(session => session.Status == "Active")
+            .OrderByDescending(session => session.Status == GameSessionStatus.Active)
             .FirstOrDefault();
 
         return new HeroSummary(
@@ -43,7 +44,9 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
             hero.CreatedAt,
             hero.Id == selectedHeroId,
-            openSession is null ? null : new HeroActiveSession(openSession.Id, openSession.Status)
+            openSession is null
+                ? null
+                : new HeroActiveSession(openSession.Id, openSession.Status.ToString())
         );
     }
 }

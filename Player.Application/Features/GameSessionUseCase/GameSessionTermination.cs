@@ -1,4 +1,5 @@
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Repositories;
 
 namespace Player.Application.Features.GameSessionUseCase;
@@ -9,15 +10,10 @@ namespace Player.Application.Features.GameSessionUseCase;
 /// </summary>
 public static class GameSessionTermination
 {
-    public const string LobbyStatus = "Lobby";
-    public const string ActiveStatus = "Active";
-    public const string AbandonedStatus = "Abandoned";
-    public const string LeftMemberStatus = "Left";
-
     public static void Close(
         IGameSessionRepository repository,
         GameSession session,
-        string terminalStatus,
+        GameSessionStatus terminalStatus,
         string cause,
         string actor,
         DateTimeOffset now
@@ -26,7 +22,7 @@ public static class GameSessionTermination
         if (session.EndedAt is not null)
             return;
 
-        string sourceStatus = session.Status;
+        GameSessionStatus sourceStatus = session.Status;
         session.Status = terminalStatus;
         session.TerminationReason = cause;
         session.EndedAt = now;
@@ -37,7 +33,7 @@ public static class GameSessionTermination
         );
         foreach (GameSessionMember member in presentMembers)
         {
-            member.MemberStatus = LeftMemberStatus;
+            member.MemberStatus = GameSessionMemberStatus.Left;
             member.LeftAt = now;
         }
 

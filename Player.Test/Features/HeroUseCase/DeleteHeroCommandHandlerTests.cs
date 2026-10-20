@@ -3,6 +3,7 @@ using Moq;
 using Player.Application.Features.GameSessionUseCase;
 using Player.Application.Features.HeroUseCase.DeleteHero;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -59,17 +60,19 @@ public sealed class DeleteHeroCommandHandlerTests
         SetupPlayer();
         Hero hero = SetupHero();
         Hero teammate = new() { Id = Guid.NewGuid(), Name = "Teammate" };
-        GameSession lobby = Session("Lobby", hero, teammate);
+        GameSession lobby = Session(GameSessionStatus.Lobby, hero, teammate);
         SetupOpenSessions(lobby);
 
         DeleteHeroResult result = await Handle();
 
-        lobby.Status.Should().Be("Abandoned");
+        lobby.Status.Should().Be(GameSessionStatus.Abandoned);
         lobby.TerminationReason.Should().Be("HeroDeleted");
         lobby.EndedAt.Should().Be(Now);
         lobby
             .Members.Should()
-            .OnlyContain(member => member.MemberStatus == "Left" && member.LeftAt == Now);
+            .OnlyContain(member =>
+                member.MemberStatus == GameSessionMemberStatus.Left && member.LeftAt == Now
+            );
         hero.IsDeleted.Should().BeTrue();
         result.ClosedSessions.Should().ContainSingle();
         GameSessionSnapshot closed = result.ClosedSessions.Single();
@@ -81,8 +84,8 @@ public sealed class DeleteHeroCommandHandlerTests
                 x.AddTransition(
                     It.Is<GameSessionTransition>(transition =>
                         transition.SessionId == lobby.Id
-                        && transition.SourceStatus == "Lobby"
-                        && transition.TargetStatus == "Abandoned"
+                        && transition.SourceStatus == GameSessionStatus.Lobby
+                        && transition.TargetStatus == GameSessionStatus.Abandoned
                         && transition.Cause == "HeroDeleted"
                     )
                 ),
@@ -95,7 +98,7 @@ public sealed class DeleteHeroCommandHandlerTests
     {
         PlayerEntity player = SetupPlayer(selectedHeroId: heroId);
         Hero hero = SetupHero();
-        GameSession running = Session("Active", hero);
+        GameSession running = Session(GameSessionStatus.Active, hero);
         SetupOpenSessions(running);
 
         Func<Task> act = Handle;
@@ -103,7 +106,7 @@ public sealed class DeleteHeroCommandHandlerTests
         await act.Should().ThrowAsync<ConflictException>();
         hero.IsDeleted.Should().BeFalse();
         player.SelectedHeroId.Should().Be(heroId);
-        running.Status.Should().Be("Active");
+        running.Status.Should().Be(GameSessionStatus.Active);
         running.EndedAt.Should().BeNull();
         sessionRepository.Verify(
             x => x.AddTransition(It.IsAny<GameSessionTransition>()),
@@ -245,7 +248,7 @@ public sealed class DeleteHeroCommandHandlerTests
             )
             .ReturnsAsync(sessions);
 
-    private GameSession Session(string status, params Hero[] heroes)
+    private GameSession Session(GameSessionStatus status, params Hero[] heroes)
     {
         var session = new GameSession
         {
@@ -263,7 +266,7 @@ public sealed class DeleteHeroCommandHandlerTests
                     HeroId = hero.Id,
                     Hero = hero,
                     GameSession = session,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     JoinedAt = Now.AddMinutes(-5),
                 }
             );

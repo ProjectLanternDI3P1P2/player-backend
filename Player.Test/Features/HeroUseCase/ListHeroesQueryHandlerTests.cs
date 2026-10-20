@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using Player.Application.Features.HeroUseCase.ListHeroes;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Repositories;
 
 namespace Player.Test.Features.HeroUseCase;
@@ -72,7 +73,11 @@ public sealed class ListHeroesQueryHandlerTests
                 [
                     new GameSessionMember
                     {
-                        GameSession = new GameSession { Id = EngagedSessionId, Status = "Active" },
+                        GameSession = new GameSession
+                        {
+                            Id = EngagedSessionId,
+                            Status = GameSessionStatus.Active,
+                        },
                     },
                 ]
                 : [],

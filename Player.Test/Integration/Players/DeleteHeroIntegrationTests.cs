@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Npgsql;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Infrastructure.Persistence;
 using PlayerEntity = Player.Domain.Entities.Player;
 
@@ -82,7 +83,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(async context =>
         {
             await SeedAsync(context, playerId, heroId);
-            context.Add(Session(sessionId, playerId, heroId, "Lobby"));
+            context.Add(Session(sessionId, playerId, heroId, GameSessionStatus.Lobby));
             await context.SaveChangesAsync();
         });
 
@@ -95,7 +96,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.AssertAsync(context =>
         {
             GameSession session = context.GameSessions.Single(x => x.Id == sessionId);
-            session.Status.Should().Be("Abandoned");
+            session.Status.Should().Be(GameSessionStatus.Abandoned);
             session.EndedAt.Should().NotBeNull();
             context
                 .GameSessionMembers.Single(x => x.SessionId == sessionId)
@@ -154,7 +155,10 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
             .Equal(sessionId);
         await fixture.AssertAsync(context =>
         {
-            context.GameSessions.Single(x => x.Id == sessionId).Status.Should().Be("Abandoned");
+            context
+                .GameSessions.Single(x => x.Id == sessionId)
+                .Status.Should()
+                .Be(GameSessionStatus.Abandoned);
             context.Heroes.Single(x => x.Id == heroId).IsDeleted.Should().BeTrue();
         });
     }
@@ -168,7 +172,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(async context =>
         {
             await SeedAsync(context, playerId, heroId);
-            context.Add(Session(sessionId, playerId, heroId, "Active"));
+            context.Add(Session(sessionId, playerId, heroId, GameSessionStatus.Active));
             await context.SaveChangesAsync();
         });
 
@@ -181,7 +185,10 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.AssertAsync(context =>
         {
             context.Heroes.Single(x => x.Id == heroId).IsDeleted.Should().BeFalse();
-            context.GameSessions.Single(x => x.Id == sessionId).Status.Should().Be("Active");
+            context
+                .GameSessions.Single(x => x.Id == sessionId)
+                .Status.Should()
+                .Be(GameSessionStatus.Active);
         });
     }
 
@@ -216,7 +223,12 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await reuse.Should().NotThrowAsync();
     }
 
-    private static GameSession Session(Guid sessionId, Guid playerId, Guid heroId, string status) =>
+    private static GameSession Session(
+        Guid sessionId,
+        Guid playerId,
+        Guid heroId,
+        GameSessionStatus status
+    ) =>
         new()
         {
             Id = sessionId,
@@ -229,7 +241,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
                 {
                     SessionId = sessionId,
                     HeroId = heroId,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     JoinedAt = DateTimeOffset.UtcNow,
                 },
             ],

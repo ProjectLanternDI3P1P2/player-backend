@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Infrastructure.Persistence;
 using PlayerEntity = Player.Domain.Entities.Player;
 
@@ -101,14 +102,14 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         var activeSession = new GameSession
         {
             Id = Guid.NewGuid(),
-            Status = "Started",
+            Status = GameSessionStatus.Started,
             Mode = "Solo",
             Members =
             [
                 new GameSessionMember
                 {
                     HeroId = brom.Id,
-                    MemberStatus = "Joined",
+                    MemberStatus = GameSessionMemberStatus.Joined,
                     JoinedAt = now,
                 },
             ],

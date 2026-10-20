@@ -1,3 +1,5 @@
+using Player.Domain.Enums;
+
 namespace Player.Domain.Entities;
 
 public sealed class GameSession
@@ -5,7 +7,7 @@ public sealed class GameSession
     public Guid Id { get; set; }
     public Guid CreatorPlayerId { get; set; }
     public Guid? MatchmakingGroupId { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public GameSessionStatus Status { get; set; }
     public string Mode { get; set; } = string.Empty;
     public Guid? DungeonRunId { get; set; }
     public string? DungeonSeed { get; set; }

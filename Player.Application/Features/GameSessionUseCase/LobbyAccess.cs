@@ -1,4 +1,5 @@
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 
@@ -20,7 +21,7 @@ internal static class LobbyAccess
             throw new KeyNotFoundException($"Session '{sessionId}' was not found.");
         if (session.CreatorPlayerId != playerId)
             throw new ConflictException(creatorRejection);
-        if (session.Status != "Lobby")
+        if (session.Status != GameSessionStatus.Lobby)
             throw new ConflictException(stateRejection);
         return session;
     }

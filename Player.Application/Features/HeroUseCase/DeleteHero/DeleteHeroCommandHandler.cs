@@ -1,6 +1,7 @@
 using MediatR;
 using Player.Application.Features.GameSessionUseCase;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -48,7 +49,7 @@ public sealed class DeleteHeroCommandHandler(
                 cancellationToken
             );
 
-        if (openSessions.Any(session => session.Status == GameSessionTermination.ActiveStatus))
+        if (openSessions.Any(session => session.Status == GameSessionStatus.Active))
             throw new ConflictException(
                 "This hero is playing a running session. It can be deleted once the run is over or abandoned."
             );
@@ -60,7 +61,7 @@ public sealed class DeleteHeroCommandHandler(
             GameSessionTermination.Close(
                 sessionRepository,
                 session,
-                GameSessionTermination.AbandonedStatus,
+                GameSessionStatus.Abandoned,
                 cause: "HeroDeleted",
                 actor: "player",
                 now

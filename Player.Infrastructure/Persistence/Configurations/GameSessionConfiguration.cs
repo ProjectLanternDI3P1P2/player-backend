@@ -12,7 +12,11 @@ public sealed class GameSessionConfiguration : IEntityTypeConfiguration<GameSess
         builder.Property(x => x.Id).HasColumnName("id");
         builder.Property(x => x.CreatorPlayerId).HasColumnName("creator_player_id");
         builder.Property(x => x.MatchmakingGroupId).HasColumnName("matchmaking_group_id");
-        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(32);
+        builder
+            .Property(x => x.Status)
+            .HasConversion<string>()
+            .HasColumnName("status")
+            .HasMaxLength(32);
         builder.Property(x => x.Mode).HasColumnName("mode").HasMaxLength(32);
         builder.Property(x => x.DungeonRunId).HasColumnName("dungeon_run_id");
         builder.Property(x => x.DungeonSeed).HasColumnName("dungeon_seed").HasMaxLength(128);
