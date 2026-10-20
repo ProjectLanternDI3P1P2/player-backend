@@ -6,6 +6,7 @@ using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Application.Features.GameSessionUseCase.StartSession;
 using Player.Application.Ports;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -35,8 +36,8 @@ public sealed class GameSessionHandlersTests
             x =>
                 x.Add(
                     It.Is<GameSession>(session =>
-                        session.Status == "Lobby"
-                        && session.Transitions.Single().TargetStatus == "Lobby"
+                        session.Status == GameSessionStatus.Lobby
+                        && session.Transitions.Single().TargetStatus == GameSessionStatus.Lobby
                     )
                 ),
             Times.Once
@@ -101,7 +102,8 @@ public sealed class GameSessionHandlersTests
             x =>
                 x.AddTransition(
                     It.Is<GameSessionTransition>(transition =>
-                        transition.SourceStatus == "Lobby" && transition.TargetStatus == "Active"
+                        transition.SourceStatus == GameSessionStatus.Lobby
+                        && transition.TargetStatus == GameSessionStatus.Active
                     )
                 ),
             Times.Once
@@ -180,7 +182,7 @@ public sealed class GameSessionHandlersTests
             );
 
         await action.Should().ThrowAsync<InvalidOperationException>();
-        session.Status.Should().Be("Lobby");
+        session.Status.Should().Be(GameSessionStatus.Lobby);
         session.DungeonRunId.Should().BeNull();
     }
 
@@ -294,7 +296,7 @@ public sealed class GameSessionHandlersTests
         {
             Id = sessionId,
             CreatorPlayerId = playerId,
-            Status = "Lobby",
+            Status = GameSessionStatus.Lobby,
             Mode = "Solo",
             DungeonSeed = dungeonSeed,
             Members =
@@ -302,7 +304,7 @@ public sealed class GameSessionHandlersTests
                 new GameSessionMember
                 {
                     HeroId = heroId,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     Hero = new Hero
                     {
                         Id = heroId,
@@ -315,7 +317,11 @@ public sealed class GameSessionHandlersTests
             ],
             Transitions =
             [
-                new GameSessionTransition { SourceStatus = "None", TargetStatus = "Lobby" },
+                new GameSessionTransition
+                {
+                    SourceStatus = GameSessionStatus.None,
+                    TargetStatus = GameSessionStatus.Lobby,
+                },
             ],
         };
 

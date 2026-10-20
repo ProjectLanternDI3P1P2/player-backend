@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -64,7 +65,7 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         {
             Id = Guid.NewGuid(),
             CreatorPlayerId = request.PlayerId,
-            Status = "Lobby",
+            Status = GameSessionStatus.Lobby,
             Mode = "Solo",
             DungeonSeed = dungeonSeed,
             LastActiveAt = now,
@@ -74,7 +75,7 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
                 {
                     HeroId = hero.Id,
                     Hero = hero,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     JoinedAt = now,
                 },
             ],
@@ -83,8 +84,8 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
                 new GameSessionTransition
                 {
                     Id = Guid.NewGuid(),
-                    SourceStatus = "None",
-                    TargetStatus = "Lobby",
+                    SourceStatus = GameSessionStatus.None,
+                    TargetStatus = GameSessionStatus.Lobby,
                     Cause = "LobbyCreated",
                     Actor = "player",
                     OccurredAt = now,

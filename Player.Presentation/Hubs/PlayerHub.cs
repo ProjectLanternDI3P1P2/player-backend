@@ -75,7 +75,7 @@ public sealed class PlayerHub(ISender sender) : HubBase
         );
     }
 
-    private static string GroupName(Guid sessionId) => $"session:{sessionId}";
+    internal static string GroupName(Guid sessionId) => $"session:{sessionId}";
 }
 
 public sealed record CreateSoloLobbyRequest(

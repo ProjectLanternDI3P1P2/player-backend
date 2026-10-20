@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -35,7 +36,7 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
         GameSession session = preparation.Lobby!;
 
         GameSessionMember? currentMember = session.Members.SingleOrDefault(member =>
-            member.MemberStatus == "Active"
+            member.MemberStatus == GameSessionMemberStatus.Active
         );
         if (currentMember is null)
             throw new ConflictException("The lobby has no active hero.");
@@ -64,7 +65,7 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
                 HeroId = hero.Id,
                 GameSession = session,
                 Hero = hero,
-                MemberStatus = "Active",
+                MemberStatus = GameSessionMemberStatus.Active,
                 JoinedAt = now,
             };
             session.Members.Add(replacement);
@@ -74,8 +75,8 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
                 {
                     Id = Guid.NewGuid(),
                     SessionId = session.Id,
-                    SourceStatus = "Lobby",
-                    TargetStatus = "Lobby",
+                    SourceStatus = GameSessionStatus.Lobby,
+                    TargetStatus = GameSessionStatus.Lobby,
                     Cause = "HeroChanged",
                     Actor = "player",
                     OccurredAt = now,

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using Player.Application.Features.HeroUseCase.GetHeroSheet;
 using Player.Domain.Entities;
+using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 
 namespace Player.Test.Features.HeroUseCase;
@@ -94,5 +95,28 @@ public sealed class GetHeroSheetQueryHandlerTests
         );
 
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_DeletedHero_SignalsTheDeletionInsteadOfReturningNull()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        DateTimeOffset deletedAt = new(2026, 10, 19, 12, 0, 0, TimeSpan.Zero);
+        var repository = new Mock<IHeroRepository>();
+        repository
+            .Setup(x => x.GetDeletedAtAsync(heroId, playerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(deletedAt);
+        var handler = new GetHeroSheetQueryHandler(repository.Object);
+
+        Func<Task> act = () =>
+            handler.Handle(
+                new GetHeroSheetQuery(playerId, heroId),
+                TestContext.Current.CancellationToken
+            );
+
+        (await act.Should().ThrowAsync<ResourceDeletedException>())
+            .Which.Should()
+            .BeEquivalentTo(new { ResourceId = heroId, DeletedAt = deletedAt });
     }
 }
