@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.2.0...v1.3.0) (2026-10-01)
+
+
+### Added
+
+* add realtime solo lobby lifecycle ([bff1c84](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/bff1c84257519e1bf7110dd03cf9c615eb20069c))
+* allow changing a lobby hero ([4f07f4f](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/4f07f4fd8aeed1b0a322a54c1fc83a6d689a034e))
+* configure CORS origins through options ([a9b5524](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/a9b55249f41595e2de4f342d8376b059ac4b4974))
+* create game sessions through PlayerHub ([1f2787e](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/1f2787ef73a0ac4b0af730487ebf62cc7f031ecc))
+
+
+### Fixed
+
+* format ([2471a37](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/2471a37fe576cf3d1d0d567393abb6241d6b1056))
+* format and tests ([844f48b](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/844f48b711e98d95ce5a4b0c06929b77d34164b2))
+* publish a single changed lobby hero ([4bde892](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/4bde892aff8d86b4777c338c876fb70c4ad47c10))
+* use generic SignalR filter registration ([23ed645](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/23ed645cf92c1a0d1148b1308628a0059b90201a))
+
+
+### Changed
+
+* centralize SignalR command errors ([edb537c](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/edb537c4aafdbe69f24fb41a9013b1789327188b))
+* share game session idempotency handling ([00cba9c](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/00cba9c27127310d28f7d742a67dca2efc7628eb))
+* share lobby command preparation ([3b70bd2](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/3b70bd27da86044c1e5c081cbb3add1dcd08b181))
+
 ## [1.2.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.1.0...v1.2.0) (2026-09-30)
 
 
