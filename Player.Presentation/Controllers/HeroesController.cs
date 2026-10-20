@@ -15,7 +15,7 @@ using Player.Presentation.Hubs;
 namespace Player.Presentation.Controllers;
 
 [ApiController]
-[Route("api/v1/players/{playerId:guid}/heroes")]
+[Route("api/player/v1/{playerId:guid}/heroes")]
 public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> playerHub)
     : ControllerBase
 {
@@ -69,7 +69,7 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
 
         return result.AlreadyExists
             ? Ok(result)
-            : Created($"/api/v1/players/{playerId}/heroes/{result.Id}", result);
+            : Created($"/api/player/v1/{playerId}/heroes/{result.Id}", result);
     }
 
     [HttpPut("{heroId:guid}/selection")]

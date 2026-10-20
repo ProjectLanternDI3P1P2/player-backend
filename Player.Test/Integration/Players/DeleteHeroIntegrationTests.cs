@@ -20,11 +20,11 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
 
         HttpResponseMessage first = await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
         HttpResponseMessage replay = await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
@@ -46,7 +46,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
             .BeTrue();
 
         List<object>? heroes = await fixture.HttpClient.GetFromJsonAsync<List<object>>(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             TestContext.Current.CancellationToken
         );
         heroes.Should().BeEmpty();
@@ -62,12 +62,12 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         Guid heroId = Guid.NewGuid();
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
         await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
@@ -88,7 +88,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         });
 
         HttpResponseMessage response = await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
@@ -142,7 +142,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         );
 
         Task<HttpResponseMessage> deletion = fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             cancellationToken
         );
         await WaitUntilALockIsAwaitedAsync(cancellationToken);
@@ -177,7 +177,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         });
 
         HttpResponseMessage response = await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
@@ -199,7 +199,7 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
         Guid heroId = Guid.NewGuid();
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
         await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
