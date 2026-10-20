@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -18,7 +19,8 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         CancellationToken cancellationToken
     )
     {
-        string fingerprint = Fingerprint(request.HeroId);
+        string? dungeonSeed = NormalizeSeed(request.DungeonSeed);
+        string fingerprint = Fingerprint(request.HeroId, dungeonSeed);
         IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,
             cancellationToken
@@ -63,8 +65,9 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         {
             Id = Guid.NewGuid(),
             CreatorPlayerId = request.PlayerId,
-            Status = "Lobby",
+            Status = GameSessionStatus.Lobby,
             Mode = "Solo",
+            DungeonSeed = dungeonSeed,
             LastActiveAt = now,
             Members =
             [
@@ -72,7 +75,7 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
                 {
                     HeroId = hero.Id,
                     Hero = hero,
-                    MemberStatus = "Active",
+                    MemberStatus = GameSessionMemberStatus.Active,
                     JoinedAt = now,
                 },
             ],
@@ -81,8 +84,8 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
                 new GameSessionTransition
                 {
                     Id = Guid.NewGuid(),
-                    SourceStatus = "None",
-                    TargetStatus = "Lobby",
+                    SourceStatus = GameSessionStatus.None,
+                    TargetStatus = GameSessionStatus.Lobby,
                     Cause = "LobbyCreated",
                     Actor = "player",
                     OccurredAt = now,
@@ -104,6 +107,11 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         return GameSessionSnapshot.From(session);
     }
 
-    private static string Fingerprint(Guid heroId) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(heroId.ToString("N"))));
+    private static string? NormalizeSeed(string? seed) =>
+        string.IsNullOrWhiteSpace(seed) ? null : seed.Trim().ToUpperInvariant();
+
+    private static string Fingerprint(Guid heroId, string? dungeonSeed) =>
+        Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes($"{heroId:N}:{dungeonSeed ?? string.Empty}"))
+        );
 }

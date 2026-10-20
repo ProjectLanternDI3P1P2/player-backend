@@ -29,6 +29,11 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
             logger.Warning(exception, "Bad request");
             await HandleBadRequestExceptionAsync(context, exception);
         }
+        catch (ResourceDeletedException exception)
+        {
+            logger.Information(exception, "Deleted resource requested");
+            await HandleResourceDeletedExceptionAsync(context, exception);
+        }
         catch (ConflictException exception)
         {
             logger.Warning(exception, "Conflict");
@@ -96,6 +101,28 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
             "Bad request",
             StatusCodes.Status400BadRequest
         );
+
+    private static async Task HandleResourceDeletedExceptionAsync(
+        HttpContext context,
+        ResourceDeletedException exception
+    )
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = "https://httpstatuses.com/410",
+            Title = "Resource deleted",
+            Detail = exception.Message,
+            Status = StatusCodes.Status410Gone,
+            Instance = context.Request.Path,
+        };
+        problemDetails.Extensions["resourceId"] = exception.ResourceId;
+        problemDetails.Extensions["deleted"] = true;
+        problemDetails.Extensions["deletedAt"] = exception.DeletedAt;
+
+        context.Response.StatusCode = StatusCodes.Status410Gone;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails, context.RequestAborted);
+    }
 
     private static async Task HandleConflictExceptionAsync(
         HttpContext context,

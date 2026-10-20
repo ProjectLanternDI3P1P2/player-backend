@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1.10
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS contracts
+WORKDIR /contracts
+COPY --from=dungeon-contracts . .
+RUN dotnet pack Dungeon.Contracts/Dungeon.Contracts.csproj --configuration Release --output /local-packages
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY NuGet.Local.config ./NuGet.config
+COPY Player.Presentation.slnx ./
+COPY Player.Contracts/Player.Contracts.csproj Player.Contracts/
+COPY Player.Domain/Player.Domain.csproj Player.Domain/
+COPY Player.Application/Player.Application.csproj Player.Application/
+COPY Player.Infrastructure/Player.Infrastructure.csproj Player.Infrastructure/
+COPY Player.Presentation/Player.Presentation.csproj Player.Presentation/
+COPY Player.Test/Player.Test.csproj Player.Test/
+COPY --from=contracts /local-packages /local-packages
+RUN dotnet restore Player.Presentation.slnx
+COPY . .
+RUN dotnet publish Player.Presentation/Player.Presentation.csproj --configuration Release --output /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+EXPOSE 8080 8081
+COPY --from=build /app/publish .
+USER $APP_UID
+ENTRYPOINT ["dotnet", "Player.Presentation.dll"]

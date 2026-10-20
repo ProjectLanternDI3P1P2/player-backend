@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Infrastructure.Persistence;
 using PlayerEntity = Player.Domain.Entities.Player;
 
@@ -48,8 +49,11 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                         false
                     ),
                 ],
-                options => options.WithStrictOrdering()
+                options => options.WithStrictOrdering().Excluding(hero => hero.ActiveSession)
             );
+        heroes![0].ActiveSession.Should().BeNull();
+        heroes[1].ActiveSession!.State.Should().Be("Started");
+        heroes[1].ActiveSession!.Id.Should().NotBeEmpty();
     }
 
     private static Task SeedAsync(PlayerDbContext context, Guid playerId)
@@ -98,14 +102,14 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         var activeSession = new GameSession
         {
             Id = Guid.NewGuid(),
-            Status = "Started",
+            Status = GameSessionStatus.Started,
             Mode = "Solo",
             Members =
             [
                 new GameSessionMember
                 {
                     HeroId = brom.Id,
-                    MemberStatus = "Joined",
+                    MemberStatus = GameSessionMemberStatus.Joined,
                     JoinedAt = now,
                 },
             ],
@@ -137,6 +141,9 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         int MaximumHealth,
         bool IsEngagedInActiveSession,
         DateTimeOffset CreatedAt,
-        bool IsSelected
+        bool IsSelected,
+        ActiveSessionResponse? ActiveSession = null
     );
+
+    private sealed record ActiveSessionResponse(Guid Id, string State);
 }

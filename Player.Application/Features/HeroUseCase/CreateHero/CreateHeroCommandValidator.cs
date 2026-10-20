@@ -1,4 +1,5 @@
 using FluentValidation;
+using Player.Domain.Entities;
 
 namespace Player.Application.Features.HeroUseCase.CreateHero;
 
@@ -22,6 +23,34 @@ public sealed class CreateHeroCommandValidator : AbstractValidator<CreateHeroCom
             .WithMessage("Hero class is required.")
             .Must(IsSupportedClassCode)
             .WithMessage("Hero class must be Warrior, Shaman, or Mage.");
+        When(
+            x => x.Appearance is not null,
+            () =>
+            {
+                RuleFor(x => x.Appearance!.SkinTone)
+                    .Must(HeroAppearanceCatalog.IsSkinToneSupported)
+                    .OverridePropertyName("appearance.skinTone")
+                    .WithMessage(
+                        $"Skin tone must be between {HeroAppearanceCatalog.MinimumSkinTone} and {HeroAppearanceCatalog.MaximumSkinTone}."
+                    );
+                RuleFor(x => x.Appearance!.HairStyle)
+                    .Must(HeroAppearanceCatalog.IsHairStyleSupported)
+                    .OverridePropertyName("appearance.hairStyle")
+                    .WithMessage("Hair style must be bald, bob1, or dap1.");
+                RuleFor(x => x.Appearance!)
+                    .Must(appearance =>
+                        !HeroAppearanceCatalog.IsHairStyleSupported(appearance.HairStyle)
+                        || HeroAppearanceCatalog.IsHairColorSupported(
+                            appearance.HairStyle,
+                            appearance.HairColor
+                        )
+                    )
+                    .OverridePropertyName("appearance.hairColor")
+                    .WithMessage(
+                        $"Hair color must be between {HeroAppearanceCatalog.MinimumHairColor} and {HeroAppearanceCatalog.MaximumHairColor}, and empty for a bald hero."
+                    );
+            }
+        );
     }
 
     private static bool IsValidHeroName(string name)

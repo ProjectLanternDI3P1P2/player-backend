@@ -1,5 +1,6 @@
 using MediatR;
 using Player.Domain.Entities;
+using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 
 namespace Player.Application.Features.HeroUseCase.GetHeroSheet;
@@ -19,6 +20,18 @@ public sealed class GetHeroSheetQueryHandler(IHeroRepository repository)
         );
         if (hero is null)
         {
+            DateTimeOffset? deletedAt = await repository.GetDeletedAtAsync(
+                request.HeroId,
+                request.PlayerId,
+                cancellationToken
+            );
+            if (deletedAt is not null)
+                throw new ResourceDeletedException(
+                    $"Hero '{request.HeroId}' has been deleted.",
+                    request.HeroId,
+                    deletedAt.Value
+                );
+
             return null;
         }
 
@@ -36,7 +49,8 @@ public sealed class GetHeroSheetQueryHandler(IHeroRepository repository)
                     skill.Skill.Label,
                     skill.Skill.TargetingType
                 ))
-                .ToList()
+                .ToList(),
+            HeroAppearance.From(hero)
         );
     }
 }

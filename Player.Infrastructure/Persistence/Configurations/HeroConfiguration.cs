@@ -18,6 +18,9 @@ public sealed class HeroConfiguration : IEntityTypeConfiguration<Hero>
         builder.Property(x => x.Endurance).HasColumnName("endurance");
         builder.Property(x => x.Agility).HasColumnName("agility");
         builder.Property(x => x.Intelligence).HasColumnName("intelligence");
+        builder.Property(x => x.SkinTone).HasColumnName("skin_tone");
+        builder.Property(x => x.HairStyle).HasColumnName("hair_style").HasMaxLength(20);
+        builder.Property(x => x.HairColor).HasColumnName("hair_color");
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.DeletedAt).HasColumnName("deleted_at");
@@ -31,6 +34,7 @@ public sealed class HeroConfiguration : IEntityTypeConfiguration<Hero>
             .WithMany(x => x.Heroes)
             .HasForeignKey(x => x.ClassCode)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.HasIndex(x => new { x.PlayerId, x.Name }).IsUnique();
+        // Deleted heroes free their name as well as their slot.
+        builder.HasIndex(x => new { x.PlayerId, x.Name }).IsUnique().HasFilter("NOT is_deleted");
     }
 }

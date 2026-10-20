@@ -195,6 +195,16 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("endurance");
 
+                    b.Property<int?>("HairColor")
+                        .HasColumnType("integer")
+                        .HasColumnName("hair_color");
+
+                    b.Property<string>("HairStyle")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("hair_style");
+
                     b.Property<int>("Intelligence")
                         .HasColumnType("integer")
                         .HasColumnName("intelligence");
@@ -217,6 +227,10 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("player_id");
 
+                    b.Property<int>("SkinTone")
+                        .HasColumnType("integer")
+                        .HasColumnName("skin_tone");
+
                     b.Property<int>("Strength")
                         .HasColumnType("integer")
                         .HasColumnName("strength");
@@ -226,7 +240,8 @@ namespace Player.Infrastructure.Migrations
                     b.HasIndex("ClassCode");
 
                     b.HasIndex("PlayerId", "Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("NOT is_deleted");
 
                     b.ToTable("hero", (string)null);
                 });

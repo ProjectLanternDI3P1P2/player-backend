@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Player.Domain.Entities;
 using Player.Infrastructure.Persistence;
 
@@ -98,7 +99,88 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         limitReached.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
-    private static Task SeedMageAsync(PlayerDbContext context, Guid playerId)
+    [Fact]
+    public async Task CreateHero_WithAppearance_IsReturnedByTheSheetAndTheList()
+    {
+        Guid playerId = Guid.NewGuid();
+        await fixture.SeedAsync(context => SeedMageAsync(context, playerId));
+
+        HttpResponseMessage created = await fixture.HttpClient.PostAsJsonAsync(
+            $"/api/v1/players/{playerId}/heroes",
+            new
+            {
+                name = "Merlin",
+                classCode = "mage",
+                idempotencyKey = Guid.NewGuid(),
+                appearance = new
+                {
+                    skinTone = 6,
+                    hairStyle = "dap1",
+                    hairColor = 9,
+                },
+            },
+            TestContext.Current.CancellationToken
+        );
+        HttpResponseMessage bald = await fixture.HttpClient.PostAsJsonAsync(
+            $"/api/v1/players/{playerId}/heroes",
+            new
+            {
+                name = "Gandor",
+                classCode = "mage",
+                idempotencyKey = Guid.NewGuid(),
+                appearance = new
+                {
+                    skinTone = 2,
+                    hairStyle = "bald",
+                    hairColor = (int?)null,
+                },
+            },
+            TestContext.Current.CancellationToken
+        );
+        HttpResponseMessage invalid = await fixture.HttpClient.PostAsJsonAsync(
+            $"/api/v1/players/{playerId}/heroes",
+            new
+            {
+                name = "Orin",
+                classCode = "mage",
+                idempotencyKey = Guid.NewGuid(),
+                appearance = new
+                {
+                    skinTone = 42,
+                    hairStyle = "bob1",
+                    hairColor = 1,
+                },
+            },
+            TestContext.Current.CancellationToken
+        );
+
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        bald.StatusCode.Should().Be(HttpStatusCode.Created);
+        invalid.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        AppearanceHolder? createdHero = await created.Content.ReadFromJsonAsync<AppearanceHolder>(
+            TestContext.Current.CancellationToken
+        );
+        createdHero!.Appearance.Should().Be(new AppearanceResponse(6, "dap1", 9));
+
+        AppearanceHolder? sheet = await fixture.HttpClient.GetFromJsonAsync<AppearanceHolder>(
+            $"/api/v1/players/{playerId}/heroes/{createdHero.Id}",
+            TestContext.Current.CancellationToken
+        );
+        sheet!.Appearance.Should().Be(new AppearanceResponse(6, "dap1", 9));
+
+        IReadOnlyList<AppearanceHolder>? heroes = await fixture.HttpClient.GetFromJsonAsync<
+            IReadOnlyList<AppearanceHolder>
+        >($"/api/v1/players/{playerId}/heroes", TestContext.Current.CancellationToken);
+        heroes!
+            .Select(hero => hero.Appearance)
+            .Should()
+            .BeEquivalentTo([
+                new AppearanceResponse(6, "dap1", 9),
+                new AppearanceResponse(2, "bald", null),
+            ]);
+    }
+
+    private static async Task SeedMageAsync(PlayerDbContext context, Guid playerId)
     {
         context.Players.Add(
             new Player.Domain.Entities.Player
@@ -109,25 +191,26 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
                 CreatedAt = DateTimeOffset.UtcNow,
             }
         );
-        context.HeroClasses.Add(
-            new HeroClass
-            {
-                Code = "mage",
-                Label = "Mage",
-                BaseHealth = 45,
-            }
-        );
-        context.Skills.Add(
-            new Skill
-            {
-                Code = "mage-bolt",
-                ClassCode = "mage",
-                Label = "Arcane Bolt",
-                RequiredLevel = 1,
-                TargetingType = "SingleEnemy",
-            }
-        );
-        return Task.CompletedTask;
+        if (!await context.HeroClasses.AnyAsync(heroClass => heroClass.Code == "mage"))
+            context.HeroClasses.Add(
+                new HeroClass
+                {
+                    Code = "mage",
+                    Label = "Mage",
+                    BaseHealth = 45,
+                }
+            );
+        if (!await context.Skills.AnyAsync(skill => skill.Code == "mage-bolt"))
+            context.Skills.Add(
+                new Skill
+                {
+                    Code = "mage-bolt",
+                    ClassCode = "mage",
+                    Label = "Arcane Bolt",
+                    RequiredLevel = 1,
+                    TargetingType = "SingleEnemy",
+                }
+            );
     }
 
     private sealed record CreateHeroRequest(string Name, string ClassCode, Guid IdempotencyKey);
@@ -142,4 +225,8 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         IReadOnlyList<string> UnlockedSkillCodes,
         bool AlreadyExists
     );
+
+    private sealed record AppearanceHolder(Guid Id, AppearanceResponse Appearance);
+
+    private sealed record AppearanceResponse(int SkinTone, string HairStyle, int? HairColor);
 }

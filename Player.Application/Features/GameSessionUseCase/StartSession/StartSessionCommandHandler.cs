@@ -3,6 +3,7 @@ using System.Text;
 using MediatR;
 using Player.Application.Ports;
 using Player.Domain.Entities;
+using Player.Domain.Enums;
 using Player.Domain.Exceptions;
 using Player.Domain.Repositories;
 using Player.Domain.Services;
@@ -39,7 +40,7 @@ public sealed class StartSessionCommandHandler(
         GameSession session = preparation.Lobby!;
 
         IReadOnlyList<DungeonParticipant> participants = session
-            .Members.Where(member => member.MemberStatus == "Active")
+            .Members.Where(member => member.MemberStatus == GameSessionMemberStatus.Active)
             .Select(member => new DungeonParticipant(member.HeroId))
             .ToArray();
         if (participants.Count == 0)
@@ -52,6 +53,7 @@ public sealed class StartSessionCommandHandler(
                 request.IdempotencyKey,
                 session.Id,
                 participants,
+                session.DungeonSeed,
                 cancellationToken
             );
         }
@@ -64,7 +66,7 @@ public sealed class StartSessionCommandHandler(
         }
 
         DateTimeOffset now = clock.UtcNow;
-        session.Status = "Active";
+        session.Status = GameSessionStatus.Active;
         session.DungeonRunId = run.Id;
         session.DungeonSeed = run.Seed;
         session.StartedAt = now;
@@ -74,8 +76,8 @@ public sealed class StartSessionCommandHandler(
             {
                 Id = Guid.NewGuid(),
                 SessionId = session.Id,
-                SourceStatus = "Lobby",
-                TargetStatus = "Active",
+                SourceStatus = GameSessionStatus.Lobby,
+                TargetStatus = GameSessionStatus.Active,
                 Cause = "DungeonRunCreated",
                 Actor = "dungeon",
                 OccurredAt = now,

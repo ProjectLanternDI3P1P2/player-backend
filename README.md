@@ -1,5 +1,8 @@
 # Player Backend
 
+Deployment parameters and target service communications are documented in
+[deployment configuration](docs/deployment-configuration.md).
+
 The Player microservice: a .NET 10 Clean Architecture solution, its CI pipeline,
 and its release flow.
 
@@ -30,6 +33,23 @@ dotnet build Player.Presentation.slnx
 dotnet test --solution Player.Presentation.slnx
 dotnet run --project Player.Presentation/Player.Presentation.csproj
 ```
+
+## Private NuGet packages
+
+When a restore needs a private `*.Contracts` package from GitHub Packages, define
+these credentials in the current PowerShell session before `dotnet restore` or
+`dotnet run`:
+
+```powershell
+$env:NuGetPackageSourceCredentials_github = "Username=<github-login>;Password=<personal-access-token>;ValidAuthenticationTypes=Basic"
+```
+
+The token needs the `read:packages` scope. The `github` suffix matches the source
+name in `NuGet.config`; never commit the token or add it to a tracked `.env` file.
+
+`docker compose up --build` uses the `local-runtime` target instead: it packages
+`../dungeon-backend/Dungeon.Contracts` locally and needs neither this token nor a
+published package. The standard Dockerfile target remains the production path.
 
 ## Internal gRPC contract
 

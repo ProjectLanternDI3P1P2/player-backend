@@ -4,9 +4,25 @@
 **/obj/
 **/.vs/
 **/.vscode/
+**/.idea/
 
 **/*.user
 **/TestResults/
 **/coverage/
 **/logs/
 **/*.log
+
+# Local credentials and Git metadata must never enter build contexts.
+.git
+.github
+.env
+.env.*
+**/secrets/
+
+# Docker files themselves are not needed inside the image.
+compose*.yaml
+compose*.yml
+docker-compose*.yaml
+docker-compose*.yml
+Dockerfile*
+.dockerignore

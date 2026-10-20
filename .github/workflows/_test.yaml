@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   test:
@@ -35,6 +36,14 @@ jobs:
 
       # Coverage is not collected here — the Sonar workflow collects it while wrapping
       # its own build, and doing it twice would only slow this job down.
+      - name: Configure GitHub Packages
+        env:
+          NUGET_USERNAME: ${{ github.actor }}
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget remove source github || true
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name github --username "$NUGET_USERNAME" --password "$NUGET_AUTH_TOKEN" --store-password-in-clear-text
+
       - name: Run tests
         env:
           PLAYER_TEST_DATABASE_CONNECTION: Host=localhost;Port=5432;Database=player_test;Username=player
