@@ -18,7 +18,8 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         CancellationToken cancellationToken
     )
     {
-        string fingerprint = Fingerprint(request.HeroId);
+        string? dungeonSeed = NormalizeSeed(request.DungeonSeed);
+        string fingerprint = Fingerprint(request.HeroId, dungeonSeed);
         IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,
             cancellationToken
@@ -65,6 +66,7 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
             CreatorPlayerId = request.PlayerId,
             Status = "Lobby",
             Mode = "Solo",
+            DungeonSeed = dungeonSeed,
             LastActiveAt = now,
             Members =
             [
@@ -104,6 +106,11 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
         return GameSessionSnapshot.From(session);
     }
 
-    private static string Fingerprint(Guid heroId) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(heroId.ToString("N"))));
+    private static string? NormalizeSeed(string? seed) =>
+        string.IsNullOrWhiteSpace(seed) ? null : seed.Trim().ToUpperInvariant();
+
+    private static string Fingerprint(Guid heroId, string? dungeonSeed) =>
+        Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes($"{heroId:N}:{dungeonSeed ?? string.Empty}"))
+        );
 }
