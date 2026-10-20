@@ -36,7 +36,6 @@ public sealed class ListHeroesQueryHandlerTests
                         "warrior",
                         1,
                         72,
-                        false,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
                         false
                     ),
@@ -46,15 +45,14 @@ public sealed class ListHeroesQueryHandlerTests
                         "shaman",
                         1,
                         50,
-                        true,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
                         false,
-                        EngagedSessionId,
-                        "Active"
+                        new HeroActiveSession(EngagedSessionId, "Active")
                     ),
                 ],
                 options => options.WithStrictOrdering()
             );
+        result.Select(hero => hero.IsEngagedInActiveSession).Should().Equal(false, true);
     }
 
     private static readonly Guid EngagedSessionId = Guid.NewGuid();

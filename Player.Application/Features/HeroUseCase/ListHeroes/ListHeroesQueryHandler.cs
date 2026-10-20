@@ -41,11 +41,9 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
             hero.ClassCode,
             hero.Level,
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
-            openSession is not null,
             hero.CreatedAt,
             hero.Id == selectedHeroId,
-            openSession?.Id,
-            openSession?.Status
+            openSession is null ? null : new HeroActiveSession(openSession.Id, openSession.Status)
         );
     }
 }

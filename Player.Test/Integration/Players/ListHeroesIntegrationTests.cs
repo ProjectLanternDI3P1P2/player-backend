@@ -48,8 +48,11 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
                         false
                     ),
                 ],
-                options => options.WithStrictOrdering()
+                options => options.WithStrictOrdering().Excluding(hero => hero.ActiveSession)
             );
+        heroes![0].ActiveSession.Should().BeNull();
+        heroes[1].ActiveSession!.State.Should().Be("Started");
+        heroes[1].ActiveSession!.Id.Should().NotBeEmpty();
     }
 
     private static Task SeedAsync(PlayerDbContext context, Guid playerId)
@@ -137,6 +140,9 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         int MaximumHealth,
         bool IsEngagedInActiveSession,
         DateTimeOffset CreatedAt,
-        bool IsSelected
+        bool IsSelected,
+        ActiveSessionResponse? ActiveSession = null
     );
+
+    private sealed record ActiveSessionResponse(Guid Id, string State);
 }
