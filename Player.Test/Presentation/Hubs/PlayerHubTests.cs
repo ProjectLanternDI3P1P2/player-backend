@@ -52,7 +52,7 @@ public sealed class PlayerHubTests
         };
 
         SessionCommandAcknowledgement acknowledgement = await hub.CreateSoloLobby(
-            new CreateSoloLobbyRequest(Guid.NewGuid(), playerId, heroId)
+            new CreateSoloLobbyRequest(Guid.NewGuid(), playerId, heroId, null)
         );
 
         acknowledgement.Accepted.Should().BeTrue();

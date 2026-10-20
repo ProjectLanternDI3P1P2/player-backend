@@ -7,6 +7,7 @@ public interface IDungeonClient
         Guid commandId,
         Guid sessionId,
         IReadOnlyList<DungeonParticipant> participants,
+        string? seed,
         CancellationToken cancellationToken
     );
 }

@@ -52,6 +52,7 @@ public sealed class StartSessionCommandHandler(
                 request.IdempotencyKey,
                 session.Id,
                 participants,
+                session.DungeonSeed,
                 cancellationToken
             );
         }
