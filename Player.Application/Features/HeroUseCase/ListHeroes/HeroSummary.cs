@@ -10,6 +10,7 @@ public sealed record HeroSummary(
     int MaximumHealth,
     DateTimeOffset CreatedAt,
     bool IsSelected,
+    HeroAppearance Appearance,
     HeroActiveSession? ActiveSession = null
 )
 {

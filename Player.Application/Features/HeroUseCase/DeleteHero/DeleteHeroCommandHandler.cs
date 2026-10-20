@@ -49,7 +49,11 @@ public sealed class DeleteHeroCommandHandler(
                 cancellationToken
             );
 
-        if (openSessions.Any(session => session.Status == GameSessionStatus.Active))
+        if (
+            openSessions.Any(session =>
+                session.Status is GameSessionStatus.Started or GameSessionStatus.Active
+            )
+        )
             throw new ConflictException(
                 "This hero is playing a running session. It can be deleted once the run is over or abandoned."
             );

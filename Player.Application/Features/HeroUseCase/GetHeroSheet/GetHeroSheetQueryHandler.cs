@@ -49,7 +49,8 @@ public sealed class GetHeroSheetQueryHandler(IHeroRepository repository)
                     skill.Skill.Label,
                     skill.Skill.TargetingType
                 ))
-                .ToList()
+                .ToList(),
+            HeroAppearance.From(hero)
         );
     }
 }

@@ -20,12 +20,14 @@ Dungeon references and technical identity data are external identifiers or claim
 | Entity | Main attributes | Purpose |
 | --- | --- | --- |
 | `PLAYER` | `player_id` (PK), `display_name`, `account_status`, `new_game_plus_level`, creation and anonymization timestamps | The player's business profile and identity. |
-| `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), name, level, attributes, soft deletion | A hero owned by a player. |
+| `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), name, level, attributes, appearance (`skin_tone`, `hair_style`, `hair_color`), soft deletion | A hero owned by a player. |
 | `HERO_CLASS` | `class_code` (PK), label, base health and mana | Hero archetype. |
 | `SKILL` | `skill_code` (PK), `class_code` (FK), label, required level, targeting type | A skill offered by a class. |
 | `HERO_SKILL` | `hero_id` + `skill_code` (PK/FK), `unlocked_at`, `is_active` | The association between a hero and a mastered skill. |
 
 A `PLAYER` may own zero or more `HERO` records; each hero belongs to exactly one player. The supplied MCD imposes a business limit of ten heroes per account. Each hero has one class, and a class offers one or more skills. `HERO_SKILL` makes the many-to-many `masters` relation explicit and carries `unlocked_at` and `is_active`.
+
+The appearance is chosen at creation: skin tone (1 to 10), hair style (`bald`, `bob1`, `dap1`) and hair color (1 to 13, empty for a bald hero). Each value names a sheet of the Mana Seed asset; the headwear follows the class and is not stored.
 
 Hero deletion is soft (`is_deleted`, `deleted_at`) and must only be allowed when no active game references the hero.
 

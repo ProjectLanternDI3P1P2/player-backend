@@ -8,7 +8,8 @@ public sealed record HeroSheet(
     DateTimeOffset CreatedAt,
     HeroAttributes Attributes,
     int MaximumHealth,
-    IReadOnlyList<HeroAbility> Abilities
+    IReadOnlyList<HeroAbility> Abilities,
+    HeroAppearance Appearance
 );
 
 public sealed record HeroAttributes(int Strength, int Endurance, int Agility, int Intelligence);

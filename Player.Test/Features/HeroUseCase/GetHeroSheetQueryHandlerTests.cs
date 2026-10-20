@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.GetHeroSheet;
 using Player.Domain.Entities;
 using Player.Domain.Exceptions;
@@ -69,7 +70,8 @@ public sealed class GetHeroSheetQueryHandlerTests
                     [
                         new HeroAbility("warrior-guard", "Guard", "Self"),
                         new HeroAbility("warrior-strike", "Strike", "SingleEnemy"),
-                    ]
+                    ],
+                    HeroAppearance.Default
                 )
             );
     }

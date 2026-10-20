@@ -18,6 +18,9 @@ public sealed class HeroConfiguration : IEntityTypeConfiguration<Hero>
         builder.Property(x => x.Endurance).HasColumnName("endurance");
         builder.Property(x => x.Agility).HasColumnName("agility");
         builder.Property(x => x.Intelligence).HasColumnName("intelligence");
+        builder.Property(x => x.SkinTone).HasColumnName("skin_tone");
+        builder.Property(x => x.HairStyle).HasColumnName("hair_style").HasMaxLength(20);
+        builder.Property(x => x.HairColor).HasColumnName("hair_color");
         builder.Property(x => x.IsDeleted).HasColumnName("is_deleted");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.DeletedAt).HasColumnName("deleted_at");

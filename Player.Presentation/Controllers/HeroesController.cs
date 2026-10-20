@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Player.Application.Features.GameSessionUseCase;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.CreateHero;
 using Player.Application.Features.HeroUseCase.DeleteHero;
 using Player.Application.Features.HeroUseCase.DeselectHero;
@@ -54,7 +55,14 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
                 playerId,
                 request.Name,
                 request.ClassCode,
-                request.IdempotencyKey
+                request.IdempotencyKey,
+                request.Appearance is null
+                    ? null
+                    : new HeroAppearance(
+                        request.Appearance.SkinTone,
+                        request.Appearance.HairStyle,
+                        request.Appearance.HairColor
+                    )
             ),
             cancellationToken
         );

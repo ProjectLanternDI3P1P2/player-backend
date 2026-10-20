@@ -33,7 +33,9 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                 member.LeftAt is null && member.GameSession.EndedAt is null
             )
             .Select(member => member.GameSession)
-            .OrderByDescending(session => session.Status == GameSessionStatus.Active)
+            .OrderByDescending(session =>
+                session.Status is GameSessionStatus.Started or GameSessionStatus.Active
+            )
             .FirstOrDefault();
 
         return new HeroSummary(
@@ -44,6 +46,7 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
             hero.CreatedAt,
             hero.Id == selectedHeroId,
+            HeroAppearance.From(hero),
             openSession is null
                 ? null
                 : new HeroActiveSession(openSession.Id, openSession.Status.ToString())

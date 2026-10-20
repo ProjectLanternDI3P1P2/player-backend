@@ -20,12 +20,14 @@ Les références vers Dungeon ou l'identité technique sont des identifiants ou 
 | Entité | Attributs principaux | Rôle |
 | --- | --- | --- |
 | `PLAYER` | `player_id` (PK), `display_name`, `account_status`, `new_game_plus_level`, dates de création et d'anonymisation | Profil et identité métier du joueur. |
-| `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), nom, niveau, caractéristiques, suppression logique | Héros appartenant à un joueur. |
+| `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), nom, niveau, caractéristiques, apparence (`skin_tone`, `hair_style`, `hair_color`), suppression logique | Héros appartenant à un joueur. |
 | `HERO_CLASS` | `class_code` (PK), libellé, PV et mana de base | Archétype d'un héros. |
 | `SKILL` | `skill_code` (PK), `class_code` (FK), libellé, niveau requis, type de ciblage | Compétence proposée par une classe. |
 | `HERO_SKILL` | `hero_id` + `skill_code` (PK/FK), `unlocked_at`, `is_active` | Association entre un héros et une compétence maîtrisée. |
 
 Un `PLAYER` peut posséder zéro à plusieurs `HERO`, tandis qu'un héros appartient à un seul joueur. Le MCD de référence limite fonctionnellement ce nombre à dix. Chaque héros appartient à une classe ; une classe propose une ou plusieurs compétences. `HERO_SKILL` rend explicite la relation N-N `masters`, qui porte les attributs `unlocked_at` et `is_active`.
+
+L'apparence est choisie à la création : teinte de peau (1 à 10), coiffure (`bald`, `bob1`, `dap1`) et couleur de cheveux (1 à 13, vide pour un héros chauve). Chaque valeur désigne une planche de l'asset Mana Seed ; le couvre-chef découle de la classe et n'est pas stocké.
 
 La suppression d'un héros est logique (`est_supprime`, `supprime_le`) et ne doit être possible que lorsqu'il n'est plus référencé par une partie active.
 

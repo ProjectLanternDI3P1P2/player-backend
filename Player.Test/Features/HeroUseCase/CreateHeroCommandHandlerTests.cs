@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.CreateHero;
 using Player.Domain.Entities;
 using Player.Domain.Exceptions;
@@ -161,6 +162,140 @@ public sealed class CreateHeroCommandHandlerTests
         repository.Verify(x => x.AddHero(It.IsAny<Hero>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Handle_WithAppearance_StoresTheChosenSkinAndHair()
+    {
+        Guid playerId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, "mage", 45, "mage-bolt");
+        var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
+
+        CreateHeroResult result = await handler.Handle(
+            new CreateHeroCommand(
+                playerId,
+                "Merlin",
+                "mage",
+                Guid.NewGuid(),
+                new HeroAppearance(7, "DAP1", 12)
+            ),
+            TestContext.Current.CancellationToken
+        );
+
+        result.Appearance.Should().Be(new HeroAppearance(7, "dap1", 12));
+        repository.Verify(
+            x =>
+                x.AddHero(
+                    It.Is<Hero>(hero =>
+                        hero.SkinTone == 7 && hero.HairStyle == "dap1" && hero.HairColor == 12
+                    )
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_BaldHero_StoresNoHairColor()
+    {
+        Guid playerId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, "warrior", 60, "warrior-strike");
+        var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
+
+        CreateHeroResult result = await handler.Handle(
+            new CreateHeroCommand(
+                playerId,
+                "Conan",
+                "warrior",
+                Guid.NewGuid(),
+                new HeroAppearance(3, "bald", null)
+            ),
+            TestContext.Current.CancellationToken
+        );
+
+        result.Appearance.Should().Be(new HeroAppearance(3, "bald", null));
+    }
+
+    [Fact]
+    public async Task Handle_WithoutAppearance_UsesTheDefaultAppearance()
+    {
+        Guid playerId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, "shaman", 50, "shaman-totem");
+        var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
+
+        CreateHeroResult result = await handler.Handle(
+            new CreateHeroCommand(playerId, "Aster", "shaman", Guid.NewGuid()),
+            TestContext.Current.CancellationToken
+        );
+
+        result.Appearance.Should().Be(HeroAppearance.Default);
+    }
+
+    [Theory]
+    [InlineData(0, "bob1", 1)]
+    [InlineData(11, "bob1", 1)]
+    [InlineData(1, "mohawk", 1)]
+    [InlineData(1, "bob1", 14)]
+    [InlineData(1, "bob1", null)]
+    [InlineData(1, "bald", 2)]
+    public async Task Handle_UnsupportedAppearance_RejectsCreation(
+        int skinTone,
+        string hairStyle,
+        int? hairColor
+    )
+    {
+        Guid playerId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, "mage", 45, "mage-bolt");
+        var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
+
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateHeroCommand(
+                    playerId,
+                    "Merlin",
+                    "mage",
+                    Guid.NewGuid(),
+                    new HeroAppearance(skinTone, hairStyle, hairColor)
+                ),
+                TestContext.Current.CancellationToken
+            );
+
+        await action.Should().ThrowAsync<BadRequestException>();
+        repository.Verify(x => x.AddHero(It.IsAny<Hero>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ReplayWithAnotherAppearance_RejectsTheKey()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid idempotencyKey = Guid.NewGuid();
+        var repository = new Mock<IHeroRepository>();
+        repository
+            .Setup(x => x.GetIdempotencyKeyAsync(idempotencyKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                new IdempotencyKey
+                {
+                    Key = idempotencyKey,
+                    PlayerId = playerId,
+                    Scope = "hero.create",
+                    RequestFingerprint = Fingerprint("Merlin", "mage"),
+                    ProducedResourceId = Guid.NewGuid(),
+                }
+            );
+        var handler = new CreateHeroCommandHandler(repository.Object, new FixedClock());
+
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateHeroCommand(
+                    playerId,
+                    "Merlin",
+                    "mage",
+                    idempotencyKey,
+                    new HeroAppearance(4, "bald", null)
+                ),
+                TestContext.Current.CancellationToken
+            );
+
+        await action.Should().ThrowAsync<ConflictException>();
+    }
+
     private static Mock<IHeroRepository> CreateRepository(
         Guid playerId,
         string classCode,
@@ -204,7 +339,7 @@ public sealed class CreateHeroCommandHandlerTests
     private static string Fingerprint(string name, string classCode) =>
         Convert.ToHexString(
             System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes($"{name}\n{classCode}")
+                System.Text.Encoding.UTF8.GetBytes($"{name}\n{classCode}\n1\nbob1\n1")
             )
         );
 
