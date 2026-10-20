@@ -15,7 +15,7 @@ public sealed class ListHeroClassesIntegrationTests(PlayerEndpointFixture fixtur
         await fixture.SeedAsync(SeedAsync);
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
-            "/api/v1/hero-classes",
+            "/api/player/v1/hero-classes",
             TestContext.Current.CancellationToken
         );
 

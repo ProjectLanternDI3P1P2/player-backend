@@ -18,7 +18,7 @@ public sealed class ListHeroesIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, playerId));
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             TestContext.Current.CancellationToken
         );
 

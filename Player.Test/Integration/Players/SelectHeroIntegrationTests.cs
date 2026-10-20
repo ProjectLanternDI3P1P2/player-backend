@@ -18,7 +18,7 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
 
         HttpResponseMessage response = await fixture.HttpClient.PutAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}/selection",
+            $"/api/player/v1/{playerId}/heroes/{heroId}/selection",
             null,
             TestContext.Current.CancellationToken
         );
@@ -32,7 +32,7 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
         );
 
         List<HeroResponse>? heroes = await fixture.HttpClient.GetFromJsonAsync<List<HeroResponse>>(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             TestContext.Current.CancellationToken
         );
         heroes.Should().ContainSingle().Which.IsSelected.Should().BeTrue();
@@ -46,7 +46,7 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId, isSelected: true));
 
         HttpResponseMessage response = await fixture.HttpClient.DeleteAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}/selection",
+            $"/api/player/v1/{playerId}/heroes/{heroId}/selection",
             TestContext.Current.CancellationToken
         );
 

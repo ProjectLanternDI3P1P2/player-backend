@@ -19,12 +19,12 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         var request = new CreateHeroRequest("Merlin", "mage", idempotencyKey);
 
         HttpResponseMessage created = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             request,
             TestContext.Current.CancellationToken
         );
         HttpResponseMessage replayed = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             request,
             TestContext.Current.CancellationToken
         );
@@ -55,12 +55,12 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         replayedHero.AlreadyExists.Should().BeTrue();
 
         HttpResponseMessage duplicateName = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new CreateHeroRequest("Merlin", "mage", Guid.NewGuid()),
             TestContext.Current.CancellationToken
         );
         HttpResponseMessage invalidName = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new CreateHeroRequest("12", "mage", Guid.NewGuid()),
             TestContext.Current.CancellationToken
         );
@@ -84,7 +84,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         )
         {
             HttpResponseMessage response = await fixture.HttpClient.PostAsJsonAsync(
-                $"/api/v1/players/{playerId}/heroes",
+                $"/api/player/v1/{playerId}/heroes",
                 new CreateHeroRequest(name, "mage", Guid.NewGuid()),
                 TestContext.Current.CancellationToken
             );
@@ -92,7 +92,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         }
 
         HttpResponseMessage limitReached = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new CreateHeroRequest("Jorah", "mage", Guid.NewGuid()),
             TestContext.Current.CancellationToken
         );
@@ -106,7 +106,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedMageAsync(context, playerId));
 
         HttpResponseMessage created = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new
             {
                 name = "Merlin",
@@ -122,7 +122,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
             TestContext.Current.CancellationToken
         );
         HttpResponseMessage bald = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new
             {
                 name = "Gandor",
@@ -138,7 +138,7 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
             TestContext.Current.CancellationToken
         );
         HttpResponseMessage invalid = await fixture.HttpClient.PostAsJsonAsync(
-            $"/api/v1/players/{playerId}/heroes",
+            $"/api/player/v1/{playerId}/heroes",
             new
             {
                 name = "Orin",
@@ -163,14 +163,14 @@ public sealed class CreateHeroIntegrationTests(PlayerEndpointFixture fixture)
         createdHero!.Appearance.Should().Be(new AppearanceResponse(6, "dap1", 9));
 
         AppearanceHolder? sheet = await fixture.HttpClient.GetFromJsonAsync<AppearanceHolder>(
-            $"/api/v1/players/{playerId}/heroes/{createdHero.Id}",
+            $"/api/player/v1/{playerId}/heroes/{createdHero.Id}",
             TestContext.Current.CancellationToken
         );
         sheet!.Appearance.Should().Be(new AppearanceResponse(6, "dap1", 9));
 
         IReadOnlyList<AppearanceHolder>? heroes = await fixture.HttpClient.GetFromJsonAsync<
             IReadOnlyList<AppearanceHolder>
-        >($"/api/v1/players/{playerId}/heroes", TestContext.Current.CancellationToken);
+        >($"/api/player/v1/{playerId}/heroes", TestContext.Current.CancellationToken);
         heroes!
             .Select(hero => hero.Appearance)
             .Should()
