@@ -348,6 +348,7 @@ public sealed class PlayerHubIntegrationTests(PlayerEndpointFixture fixture)
             Guid commandId,
             Guid sessionId,
             IReadOnlyList<DungeonParticipant> participants,
+            string? seed,
             CancellationToken cancellationToken
         ) => Task.FromResult(run);
     }

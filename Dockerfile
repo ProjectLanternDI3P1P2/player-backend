@@ -6,8 +6,8 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_NOLOGO=1
 
 WORKDIR /src
-COPY NuGet.config ./
 
+COPY NuGet.config ./
 COPY Player.Presentation.slnx ./
 COPY Player.Contracts/Player.Contracts.csproj Player.Contracts/
 COPY Player.Domain/Player.Domain.csproj Player.Domain/
