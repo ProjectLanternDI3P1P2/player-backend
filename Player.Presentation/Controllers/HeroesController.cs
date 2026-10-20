@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.CreateHero;
 using Player.Application.Features.HeroUseCase.DeselectHero;
 using Player.Application.Features.HeroUseCase.GetHeroSheet;
@@ -49,7 +50,14 @@ public sealed class HeroesController(ISender sender) : ControllerBase
                 playerId,
                 request.Name,
                 request.ClassCode,
-                request.IdempotencyKey
+                request.IdempotencyKey,
+                request.Appearance is null
+                    ? null
+                    : new HeroAppearance(
+                        request.Appearance.SkinTone,
+                        request.Appearance.HairStyle,
+                        request.Appearance.HairColor
+                    )
             ),
             cancellationToken
         );

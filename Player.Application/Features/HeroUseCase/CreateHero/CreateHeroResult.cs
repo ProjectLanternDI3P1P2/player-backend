@@ -8,5 +8,6 @@ public sealed record CreateHeroResult(
     int MaximumHealth,
     DateTimeOffset CreatedAt,
     IReadOnlyList<string> UnlockedSkillCodes,
-    bool AlreadyExists
+    bool AlreadyExists,
+    HeroAppearance Appearance
 );

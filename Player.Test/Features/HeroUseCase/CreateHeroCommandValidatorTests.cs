@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.CreateHero;
 
 namespace Player.Test.Features.HeroUseCase;
@@ -88,5 +89,59 @@ public sealed class CreateHeroCommandValidatorTests
                 error.PropertyName == "ClassCode"
                 && error.ErrorMessage == "Hero class must be Warrior, Shaman, or Mage."
             );
+    }
+    [Theory]
+    [InlineData(1, "bob1", 1)]
+    [InlineData(10, "dap1", 13)]
+    [InlineData(5, "bald", null)]
+    [InlineData(5, "BOB1", 4)]
+    public void Validate_SupportedAppearance_HasNoAppearanceErrors(
+        int skinTone,
+        string hairStyle,
+        int? hairColor
+    )
+    {
+        var validator = new CreateHeroCommandValidator();
+
+        var result = validator.Validate(
+            new CreateHeroCommand(
+                Guid.NewGuid(),
+                "Aster",
+                "mage",
+                Guid.NewGuid(),
+                new HeroAppearance(skinTone, hairStyle, hairColor)
+            )
+        );
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(0, "bob1", 1, "appearance.skinTone")]
+    [InlineData(11, "bob1", 1, "appearance.skinTone")]
+    [InlineData(1, "mohawk", 1, "appearance.hairStyle")]
+    [InlineData(1, "bob1", 0, "appearance.hairColor")]
+    [InlineData(1, "dap1", null, "appearance.hairColor")]
+    [InlineData(1, "bald", 3, "appearance.hairColor")]
+    public void Validate_UnsupportedAppearance_ReportsTheFaultyField(
+        int skinTone,
+        string hairStyle,
+        int? hairColor,
+        string propertyName
+    )
+    {
+        var validator = new CreateHeroCommandValidator();
+
+        var result = validator.Validate(
+            new CreateHeroCommand(
+                Guid.NewGuid(),
+                "Aster",
+                "mage",
+                Guid.NewGuid(),
+                new HeroAppearance(skinTone, hairStyle, hairColor)
+            )
+        );
+
+        result.Errors.Should().ContainSingle().Which.PropertyName.Should().Be(propertyName);
     }
 }

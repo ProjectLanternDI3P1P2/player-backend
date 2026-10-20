@@ -11,6 +11,11 @@ public sealed class Hero
     public int Endurance { get; set; }
     public int Agility { get; set; }
     public int Intelligence { get; set; }
+    public int SkinTone { get; set; } = HeroAppearanceCatalog.DefaultSkinTone;
+    public string HairStyle { get; set; } = HeroAppearanceCatalog.DefaultHairStyle;
+
+    /// <summary>Null when the hero is bald.</summary>
+    public int? HairColor { get; set; } = HeroAppearanceCatalog.DefaultHairColor;
     public bool IsDeleted { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }

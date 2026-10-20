@@ -22,7 +22,8 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
     {
         string name = NormalizeName(request.Name);
         string classCode = request.ClassCode.Trim().ToLowerInvariant();
-        string fingerprint = CreateFingerprint(name, classCode);
+        HeroAppearance appearance = NormalizeAppearance(request.Appearance);
+        string fingerprint = CreateFingerprint(name, classCode, appearance);
 
         IdempotencyKey? existing = await repository.GetIdempotencyKeyAsync(
             request.IdempotencyKey,
@@ -97,6 +98,9 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
             ClassCode = classCode,
             HeroClass = heroClass,
             Level = 1,
+            SkinTone = appearance.SkinTone,
+            HairStyle = appearance.HairStyle,
+            HairColor = appearance.HairColor,
             CreatedAt = now,
         };
         hero.HeroSkills.Add(
@@ -168,7 +172,8 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
             hero.HeroClass.BaseHealth + (hero.Endurance * 6),
             hero.CreatedAt,
             hero.HeroSkills.Where(x => x.IsActive).Select(x => x.SkillCode).ToList(),
-            alreadyExists
+            alreadyExists,
+            HeroAppearance.From(hero)
         );
 
     private static string NormalizeName(string name)
@@ -190,6 +195,34 @@ public sealed class CreateHeroCommandHandler(IHeroRepository repository, IClock 
         return normalized;
     }
 
-    private static string CreateFingerprint(string name, string classCode) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{name}\n{classCode}")));
+    private static HeroAppearance NormalizeAppearance(HeroAppearance? appearance)
+    {
+        if (appearance is null)
+        {
+            return HeroAppearance.Default;
+        }
+
+        if (!appearance.IsSupported)
+        {
+            throw new BadRequestException(
+                "Hero appearance must use a supported skin tone, hair style, and hair color."
+            );
+        }
+
+        return appearance.Normalize();
+    }
+
+    // The appearance is part of the request: replaying a key with another look is a conflict.
+    private static string CreateFingerprint(
+        string name,
+        string classCode,
+        HeroAppearance appearance
+    ) =>
+        Convert.ToHexString(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(
+                    $"{name}\n{classCode}\n{appearance.SkinTone}\n{appearance.HairStyle}\n{appearance.HairColor}"
+                )
+            )
+        );
 }

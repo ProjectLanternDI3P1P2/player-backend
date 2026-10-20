@@ -32,7 +32,8 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
                     member.LeftAt is null && member.GameSession.EndedAt is null
                 ),
                 hero.CreatedAt,
-                hero.Id == selectedHeroId
+                hero.Id == selectedHeroId,
+                HeroAppearance.From(hero)
             ))
             .ToList();
     }

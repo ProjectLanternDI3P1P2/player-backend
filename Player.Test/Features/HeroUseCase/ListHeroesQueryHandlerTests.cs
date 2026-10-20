@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using Player.Application.Features.HeroUseCase;
 using Player.Application.Features.HeroUseCase.ListHeroes;
 using Player.Domain.Entities;
 using Player.Domain.Repositories;
@@ -38,7 +39,8 @@ public sealed class ListHeroesQueryHandlerTests
                         72,
                         false,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
-                        false
+                        false,
+                        HeroAppearance.Default
                     ),
                     new HeroSummary(
                         result[1].Id,
@@ -48,7 +50,8 @@ public sealed class ListHeroesQueryHandlerTests
                         50,
                         true,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
-                        false
+                        false,
+                        HeroAppearance.Default
                     ),
                 ],
                 options => options.WithStrictOrdering()
