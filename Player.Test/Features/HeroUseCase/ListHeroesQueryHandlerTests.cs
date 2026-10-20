@@ -48,12 +48,16 @@ public sealed class ListHeroesQueryHandlerTests
                         50,
                         true,
                         new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero),
-                        false
+                        false,
+                        EngagedSessionId,
+                        "Active"
                     ),
                 ],
                 options => options.WithStrictOrdering()
             );
     }
+
+    private static readonly Guid EngagedSessionId = Guid.NewGuid();
 
     private static Hero CreateHero(string name, int baseHealth, int endurance, bool engaged) =>
         new()
@@ -66,7 +70,13 @@ public sealed class ListHeroesQueryHandlerTests
             Endurance = endurance,
             HeroClass = new HeroClass { BaseHealth = baseHealth },
             SessionMembers = engaged
-                ? [new GameSessionMember { GameSession = new GameSession { Status = "Started" } }]
+                ?
+                [
+                    new GameSessionMember
+                    {
+                        GameSession = new GameSession { Id = EngagedSessionId, Status = "Active" },
+                    },
+                ]
                 : [],
         };
 }

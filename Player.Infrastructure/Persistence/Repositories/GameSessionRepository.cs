@@ -38,6 +38,27 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
             )
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<GameSession>> ListOpenSessionsForHeroForUpdateAsync(
+        Guid heroId,
+        CancellationToken cancellationToken
+    ) =>
+        await dbContext
+            .GameSessions.FromSql(
+                $"""
+                SELECT * FROM game_session
+                WHERE status IN ('Lobby', 'Active')
+                  AND id IN (
+                      SELECT session_id FROM game_session_member
+                      WHERE hero_id = {heroId} AND member_status = 'Active'
+                  )
+                ORDER BY id
+                FOR UPDATE
+                """
+            )
+            .Include(x => x.Members)
+                .ThenInclude(x => x.Hero)
+            .ToListAsync(cancellationToken);
+
     public Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken) =>
         dbContext.GameSessionMembers.AnyAsync(
             member =>

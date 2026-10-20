@@ -1,6 +1,7 @@
 using FluentValidation;
 using Grpc.Core;
 using Grpc.Core.Interceptors;
+using Player.Domain.Exceptions;
 using ILogger = Serilog.ILogger;
 
 namespace Player.Presentation.Grpc.Interceptors;
@@ -22,6 +23,19 @@ public sealed class GrpcExceptionInterceptor(ILogger logger, IHostEnvironment en
         catch (RpcException)
         {
             throw;
+        }
+        catch (ResourceDeletedException exception)
+        {
+            logger.Information(exception, "gRPC deleted resource requested.");
+            var trailers = new Metadata
+            {
+                { "resource-state", "deleted" },
+                { "deleted-at", exception.DeletedAt.ToString("O") },
+            };
+            throw new RpcException(
+                new Status(StatusCode.FailedPrecondition, exception.Message),
+                trailers
+            );
         }
         catch (KeyNotFoundException exception)
         {

@@ -18,6 +18,16 @@ public interface IHeroRepository
         Guid playerId,
         CancellationToken cancellationToken
     );
+    Task<Hero?> GetByIdAndPlayerIdForUpdateAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    );
+    Task<DateTimeOffset?> GetDeletedAtAsync(
+        Guid heroId,
+        Guid playerId,
+        CancellationToken cancellationToken
+    );
     Task<PlayerEntity?> GetPlayerForUpdateAsync(Guid playerId, CancellationToken cancellationToken);
     Task<HeroClass?> GetHeroClassAsync(string classCode, CancellationToken cancellationToken);
     Task<Skill?> GetFirstSkillAsync(string classCode, CancellationToken cancellationToken);

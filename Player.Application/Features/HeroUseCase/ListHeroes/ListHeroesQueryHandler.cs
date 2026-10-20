@@ -21,19 +21,31 @@ public sealed class ListHeroesQueryHandler(IHeroRepository repository)
             cancellationToken
         );
 
-        return heroes
-            .Select(hero => new HeroSummary(
-                hero.Id,
-                hero.Name,
-                hero.ClassCode,
-                hero.Level,
-                hero.HeroClass.BaseHealth + (hero.Endurance * 6),
-                hero.SessionMembers.Any(member =>
-                    member.LeftAt is null && member.GameSession.EndedAt is null
-                ),
-                hero.CreatedAt,
-                hero.Id == selectedHeroId
-            ))
-            .ToList();
+        return heroes.Select(hero => ToSummary(hero, selectedHeroId)).ToList();
+    }
+
+    private static HeroSummary ToSummary(Hero hero, Guid? selectedHeroId)
+    {
+        // Lets the client tell a lobby (deletable after confirmation) from a running dungeon.
+        GameSession? openSession = hero
+            .SessionMembers.Where(member =>
+                member.LeftAt is null && member.GameSession.EndedAt is null
+            )
+            .Select(member => member.GameSession)
+            .OrderByDescending(session => session.Status == "Active")
+            .FirstOrDefault();
+
+        return new HeroSummary(
+            hero.Id,
+            hero.Name,
+            hero.ClassCode,
+            hero.Level,
+            hero.HeroClass.BaseHealth + (hero.Endurance * 6),
+            openSession is not null,
+            hero.CreatedAt,
+            hero.Id == selectedHeroId,
+            openSession?.Id,
+            openSession?.Status
+        );
     }
 }

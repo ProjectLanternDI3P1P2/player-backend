@@ -8,5 +8,7 @@ public sealed record HeroSummary(
     int MaximumHealth,
     bool IsEngagedInActiveSession,
     DateTimeOffset CreatedAt,
-    bool IsSelected
+    bool IsSelected,
+    Guid? ActiveSessionId = null,
+    string? ActiveSessionState = null
 );

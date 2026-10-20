@@ -31,6 +31,7 @@ public sealed class HeroConfiguration : IEntityTypeConfiguration<Hero>
             .WithMany(x => x.Heroes)
             .HasForeignKey(x => x.ClassCode)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.HasIndex(x => new { x.PlayerId, x.Name }).IsUnique();
+        // Deleted heroes free their name as well as their slot.
+        builder.HasIndex(x => new { x.PlayerId, x.Name }).IsUnique().HasFilter("NOT is_deleted");
     }
 }

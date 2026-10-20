@@ -226,7 +226,8 @@ namespace Player.Infrastructure.Migrations
                     b.HasIndex("ClassCode");
 
                     b.HasIndex("PlayerId", "Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("NOT is_deleted");
 
                     b.ToTable("hero", (string)null);
                 });
