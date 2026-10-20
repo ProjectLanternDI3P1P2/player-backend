@@ -23,10 +23,7 @@ jobs:
       - name: Configure GitHub Packages
         env:
           NUGET_USERNAME: ${{ github.actor }}
-          # Dungeon.Contracts is produced by another private repository. The
-          # workflow-scoped GITHUB_TOKEN cannot read it unless package access is
-          # explicitly granted to Player, so use the cross-repository bot token.
-          NUGET_AUTH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dotnet nuget remove source github || true
           dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --name github --username "$NUGET_USERNAME" --password "$NUGET_AUTH_TOKEN" --store-password-in-clear-text

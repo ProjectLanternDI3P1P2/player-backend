@@ -22,6 +22,7 @@ public sealed class DungeonGrpcClientTests
         Guid firstHeroId = Guid.NewGuid();
         Guid secondHeroId = Guid.NewGuid();
         Guid runId = Guid.NewGuid();
+        const string seed = "A1B2C3D4E5F6G";
         var client = CreateClient(
             CreateCall(
                 new CreateDungeonRunResponse { RunId = runId.ToString(), Seed = "A1B2C3D4E5F6G" }
@@ -34,6 +35,7 @@ public sealed class DungeonGrpcClientTests
             commandId,
             sessionId,
             [new DungeonParticipant(firstHeroId), new DungeonParticipant(secondHeroId)],
+            seed,
             TestContext.Current.CancellationToken
         );
 
@@ -44,9 +46,10 @@ public sealed class DungeonGrpcClientTests
                     It.Is<CreateDungeonRunRequest>(request =>
                         request.CommandId == commandId.ToString()
                         && request.GameSessionId == sessionId.ToString()
-                        && request
-                            .Participants.Select(participant => participant.HeroId)
-                            .SequenceEqual([firstHeroId.ToString(), secondHeroId.ToString()])
+                        && request.Seed == seed
+                        && request.Participants.Count == 2
+                        && request.Participants[0].HeroId == firstHeroId.ToString()
+                        && request.Participants[1].HeroId == secondHeroId.ToString()
                     ),
                     It.Is<CallOptions>(callOptions =>
                         callOptions.CancellationToken == TestContext.Current.CancellationToken
@@ -77,7 +80,8 @@ public sealed class DungeonGrpcClientTests
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 [new DungeonParticipant(Guid.NewGuid())],
-                TestContext.Current.CancellationToken
+                seed: null,
+                cancellationToken: TestContext.Current.CancellationToken
             );
 
         await action
@@ -106,7 +110,8 @@ public sealed class DungeonGrpcClientTests
                 Guid.NewGuid(),
                 Guid.NewGuid(),
                 [new DungeonParticipant(Guid.NewGuid())],
-                TestContext.Current.CancellationToken
+                seed: null,
+                cancellationToken: TestContext.Current.CancellationToken
             );
 
         await action
