@@ -19,19 +19,17 @@ public sealed class DeleteHeroCommandHandler(
         CancellationToken cancellationToken
     )
     {
-        // Lock order (player, sessions, hero) matches the session use cases.
+        // Lock order: player, hero, then the hero's sessions. The hero row is the one lock every
+        // command that enrols a hero takes (CreateSoloLobby, ChangeSessionHero), so holding it
+        // before looking for sessions closes the race where a lobby is created between that
+        // lookup and the deletion: a concurrent enrolment either committed first (its lobby is
+        // found below and closed) or waits, then sees the hero deleted and is refused.
         PlayerEntity? player = await heroRepository.GetPlayerForUpdateAsync(
             request.PlayerId,
             cancellationToken
         );
         if (player is null)
             throw new KeyNotFoundException($"Player '{request.PlayerId}' was not found.");
-
-        IReadOnlyList<GameSession> openSessions =
-            await sessionRepository.ListOpenSessionsForHeroForUpdateAsync(
-                request.HeroId,
-                cancellationToken
-            );
 
         Hero? hero = await heroRepository.GetByIdAndPlayerIdForUpdateAsync(
             request.HeroId,
@@ -43,6 +41,12 @@ public sealed class DeleteHeroCommandHandler(
 
         if (hero.IsDeleted)
             return new DeleteHeroResult(hero.Id, hero.DeletedAt ?? hero.CreatedAt, true, []);
+
+        IReadOnlyList<GameSession> openSessions =
+            await sessionRepository.ListOpenSessionsForHeroForUpdateAsync(
+                hero.Id,
+                cancellationToken
+            );
 
         if (openSessions.Any(session => session.Status == GameSessionTermination.ActiveStatus))
             throw new ConflictException(

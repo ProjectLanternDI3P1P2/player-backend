@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Npgsql;
 using Player.Domain.Entities;
 using Player.Infrastructure.Persistence;
 using PlayerEntity = Player.Domain.Entities.Player;
@@ -100,6 +101,64 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
                 .GameSessionMembers.Single(x => x.SessionId == sessionId)
                 .LeftAt.Should()
                 .NotBeNull();
+            context.Heroes.Single(x => x.Id == heroId).IsDeleted.Should().BeTrue();
+        });
+    }
+
+    [Fact]
+    public async Task Delete_WhileALobbyIsBeingCreatedForTheHero_ClosesThatLobby()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        Guid sessionId = Guid.NewGuid();
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
+
+        // Plays CreateSoloLobby: lock the hero, create the lobby, commit later.
+        await using var creation = new NpgsqlConnection(fixture.ConnectionString);
+        await creation.OpenAsync(cancellationToken);
+        await using NpgsqlTransaction transaction = await creation.BeginTransactionAsync(
+            cancellationToken
+        );
+        await ExecuteAsync(
+            creation,
+            transaction,
+            "SELECT id FROM hero WHERE id = @hero FOR UPDATE",
+            ("hero", heroId)
+        );
+        await ExecuteAsync(
+            creation,
+            transaction,
+            """
+            INSERT INTO game_session (id, creator_player_id, status, mode, progression_recorded, last_active_at)
+            VALUES (@session, @player, 'Lobby', 'Solo', false, now());
+            INSERT INTO game_session_member (session_id, hero_id, member_status, joined_at)
+            VALUES (@session, @hero, 'Active', now());
+            """,
+            ("session", sessionId),
+            ("player", playerId),
+            ("hero", heroId)
+        );
+
+        Task<HttpResponseMessage> deletion = fixture.HttpClient.DeleteAsync(
+            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            cancellationToken
+        );
+        await WaitUntilALockIsAwaitedAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        HttpResponseMessage response = await deletion;
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (
+            await response.Content.ReadFromJsonAsync<DeleteWithSessionsResponse>(
+                cancellationToken
+            )
+        )!
+            .ClosedSessionIds.Should()
+            .Equal(sessionId);
+        await fixture.AssertAsync(context =>
+        {
+            context.GameSessions.Single(x => x.Id == sessionId).Status.Should().Be("Abandoned");
             context.Heroes.Single(x => x.Id == heroId).IsDeleted.Should().BeTrue();
         });
     }
@@ -211,4 +270,37 @@ public sealed class DeleteHeroIntegrationTests(PlayerEndpointFixture fixture)
     }
 
     private sealed record DeleteResponse(bool AlreadyDeleted);
+
+    private sealed record DeleteWithSessionsResponse(IReadOnlyList<Guid> ClosedSessionIds);
+
+    private static async Task ExecuteAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        string sql,
+        params (string Name, Guid Value)[] parameters
+    )
+    {
+        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        foreach ((string name, Guid value) in parameters)
+            command.Parameters.AddWithValue(name, value);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>Waits until the deletion is blocked on a row lock of this test database.</summary>
+    private async Task WaitUntilALockIsAwaitedAsync(CancellationToken cancellationToken)
+    {
+        await using var probe = new NpgsqlConnection(fixture.ConnectionString);
+        await probe.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'",
+            probe
+        );
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            if ((long)(await command.ExecuteScalarAsync(cancellationToken))! > 0)
+                return;
+            await Task.Delay(50, cancellationToken);
+        }
+        throw new TimeoutException("The deletion never waited for the hero lock.");
+    }
 }

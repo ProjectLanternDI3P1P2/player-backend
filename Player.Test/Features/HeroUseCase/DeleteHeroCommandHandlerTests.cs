@@ -131,6 +131,51 @@ public sealed class DeleteHeroCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_LocksTheHeroBeforeLookingForItsSessions()
+    {
+        // A lobby created between the session lookup and the hero lock would be missed and
+        // keep referencing a deleted hero: the hero lock must come first.
+        var calls = new List<string>();
+        SetupPlayer();
+        heroRepository
+            .Setup(x =>
+                x.GetByIdAndPlayerIdForUpdateAsync(heroId, playerId, It.IsAny<CancellationToken>())
+            )
+            .Callback(() => calls.Add("lock hero"))
+            .ReturnsAsync(new Hero { Id = heroId, PlayerId = playerId });
+        sessionRepository
+            .Setup(x =>
+                x.ListOpenSessionsForHeroForUpdateAsync(heroId, It.IsAny<CancellationToken>())
+            )
+            .Callback(() => calls.Add("lock sessions"))
+            .ReturnsAsync([]);
+
+        await Handle();
+
+        calls.Should().Equal("lock hero", "lock sessions");
+    }
+
+    [Fact]
+    public async Task Handle_Replay_DoesNotLockAnySession()
+    {
+        SetupPlayer();
+        Hero hero = SetupHero();
+        hero.IsDeleted = true;
+        hero.DeletedAt = Now.AddMinutes(-5);
+
+        await Handle();
+
+        sessionRepository.Verify(
+            x =>
+                x.ListOpenSessionsForHeroForUpdateAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
     public async Task Handle_UnknownOrForeignHero_ThrowsNotFound()
     {
         SetupPlayer();

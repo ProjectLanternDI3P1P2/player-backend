@@ -10,6 +10,11 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
     private TestDatabase? database;
     private PlayerWebApplicationFactory? factory;
 
+    /// <summary>For tests that hold their own database locks next to the API.</summary>
+    public string ConnectionString =>
+        database?.ConnectionString
+        ?? throw new InvalidOperationException("Fixture not initialized.");
+
     public HttpClient HttpClient =>
         factory?.CreateClient() ?? throw new InvalidOperationException("Fixture not initialized.");
 
