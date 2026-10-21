@@ -5,6 +5,7 @@ using Player.Presentation.Extensions.LogExtension;
 using Player.Presentation.Grpc.Interceptors;
 using Player.Presentation.Hubs.Filters;
 using Player.Presentation.Middleware;
+using Player.Presentation.Authentication;
 using Serilog;
 
 namespace Player.Presentation.Extensions;
@@ -44,6 +45,7 @@ public static class BuilderExtension
         builder.Services.AddTransient<CorrelationIdInterceptor>();
         builder.Services.AddTransient<GrpcExceptionInterceptor>();
         builder.Services.AddTransient<SignalRCommandExceptionFilter>();
+        builder.Services.AddScoped<ICurrentPlayerResolver, CurrentPlayerResolver>();
         builder.Services.AddHttpClient();
 
         return builder;

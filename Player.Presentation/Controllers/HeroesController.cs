@@ -11,33 +11,39 @@ using Player.Application.Features.HeroUseCase.ListHeroes;
 using Player.Application.Features.HeroUseCase.SelectHero;
 using Player.Presentation.DTO;
 using Player.Presentation.Hubs;
+using Player.Presentation.Authentication;
 
 namespace Player.Presentation.Controllers;
 
 [ApiController]
-[Route("api/player/v1/{playerId:guid}/heroes")]
-public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> playerHub)
+[Route("api/player/v1/me/heroes")]
+public sealed class HeroesController(
+    ISender sender,
+    IHubContext<PlayerHub> playerHub,
+    ICurrentPlayerResolver currentPlayer
+)
     : ControllerBase
 {
     [HttpGet("{heroId:guid}")]
     public async Task<IActionResult> GetSheetAsync(
-        Guid playerId,
         Guid heroId,
         CancellationToken cancellationToken
     )
     {
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
         HeroSheet? hero = await sender.Send<HeroSheet?>(
-            new GetHeroSheetQuery(playerId, heroId),
+            new GetHeroSheetQuery(currentPlayerId, heroId),
             cancellationToken
         );
         return hero is null ? NotFound() : Ok(hero);
     }
 
     [HttpGet]
-    public async Task<IActionResult> ListAsync(Guid playerId, CancellationToken cancellationToken)
+    public async Task<IActionResult> ListAsync(CancellationToken cancellationToken)
     {
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
         IReadOnlyList<HeroSummary> heroes = await sender.Send<IReadOnlyList<HeroSummary>>(
-            new ListHeroesQuery(playerId),
+            new ListHeroesQuery(currentPlayerId),
             cancellationToken
         );
         return Ok(heroes);
@@ -45,14 +51,14 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
-        Guid playerId,
         CreateHeroRequest request,
         CancellationToken cancellationToken
     )
     {
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
         CreateHeroResult result = await sender.Send<CreateHeroResult>(
             new CreateHeroCommand(
-                playerId,
+                currentPlayerId,
                 request.Name,
                 request.ClassCode,
                 request.IdempotencyKey,
@@ -69,28 +75,28 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
 
         return result.AlreadyExists
             ? Ok(result)
-            : Created($"/api/player/v1/{playerId}/heroes/{result.Id}", result);
+            : Created($"/api/player/v1/me/heroes/{result.Id}", result);
     }
 
     [HttpPut("{heroId:guid}/selection")]
     public async Task<IActionResult> SelectAsync(
-        Guid playerId,
         Guid heroId,
         CancellationToken cancellationToken
     )
     {
-        await sender.Send(new SelectHeroCommand(playerId, heroId), cancellationToken);
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
+        await sender.Send(new SelectHeroCommand(currentPlayerId, heroId), cancellationToken);
         return NoContent();
     }
 
     [HttpDelete("{heroId:guid}/selection")]
     public async Task<IActionResult> DeselectAsync(
-        Guid playerId,
         Guid heroId,
         CancellationToken cancellationToken
     )
     {
-        await sender.Send(new DeselectHeroCommand(playerId, heroId), cancellationToken);
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
+        await sender.Send(new DeselectHeroCommand(currentPlayerId, heroId), cancellationToken);
         return NoContent();
     }
 
@@ -101,13 +107,13 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
     /// </summary>
     [HttpDelete("{heroId:guid}")]
     public async Task<IActionResult> DeleteAsync(
-        Guid playerId,
         Guid heroId,
         CancellationToken cancellationToken
     )
     {
+        Guid currentPlayerId = await ResolvePlayerIdAsync(cancellationToken);
         DeleteHeroResult result = await sender.Send<DeleteHeroResult>(
-            new DeleteHeroCommand(playerId, heroId),
+            new DeleteHeroCommand(currentPlayerId, heroId),
             cancellationToken
         );
 
@@ -132,5 +138,10 @@ public sealed class HeroesController(ISender sender, IHubContext<PlayerHub> play
                 result.ClosedSessions.Select(session => session.SessionId).ToArray()
             )
         );
+    }
+
+    private Task<Guid> ResolvePlayerIdAsync(CancellationToken cancellationToken)
+    {
+        return currentPlayer.ResolveAsync(HttpContext, cancellationToken);
     }
 }
