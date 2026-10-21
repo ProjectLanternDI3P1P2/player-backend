@@ -18,7 +18,8 @@ public sealed class CurrentPlayerResolver(PlayerDbContext dbContext, IClock cloc
 
     public async Task<Guid> ResolveAsync(HttpContext? context, CancellationToken cancellationToken)
     {
-        string externalUserId = context?.Request.Headers[UserIdHeader].FirstOrDefault()?.Trim() ?? "";
+        string externalUserId =
+            context?.Request.Headers[UserIdHeader].FirstOrDefault()?.Trim() ?? "";
         if (string.IsNullOrWhiteSpace(externalUserId))
         {
             throw new UnauthorizedException("The authenticated user identity is missing.");
@@ -33,6 +34,7 @@ public sealed class CurrentPlayerResolver(PlayerDbContext dbContext, IClock cloc
             return player.Id;
         }
 
+        //TODO: Supprimer ça : Création du player à la création du compte keycloak plutôt qu'à un appel random
         string? username = context?.Request.Headers[UsernameHeader].FirstOrDefault()?.Trim();
         Guid playerId = Guid.NewGuid();
         player = new PlayerEntity
