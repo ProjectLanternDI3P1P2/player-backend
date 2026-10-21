@@ -12,14 +12,14 @@ concurrency:
 
 jobs:
   delivery:
-    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/dev'
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: read
-    uses: ProjectLanternDI3P1P2/platform-gitops/.github/workflows/publish-and-promote.yaml@b5ac372c8d41b074ab76d1de4a715a42f492ced4 # feat/argocd-delivery
+    uses: ProjectLanternDI3P1P2/platform-gitops/.github/workflows/publish-and-promote.yaml@ad7808c5dd987eeeb20f6e4dd99d9e7de4d259c5 # Harbor 192.214.203.200:18443
     with:
       application: player
-      image: registry.lantern.diiage/lantern/player-backend
+      image: 192.214.203.200:18443/lantern/player-backend
     secrets:
       HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
       HARBOR_TOKEN: ${{ secrets.HARBOR_TOKEN }}
