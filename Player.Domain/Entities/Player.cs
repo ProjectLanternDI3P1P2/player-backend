@@ -3,6 +3,7 @@ namespace Player.Domain.Entities;
 public sealed class Player
 {
     public Guid Id { get; set; }
+    public string? ExternalUserId { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string AccountStatus { get; set; } = string.Empty;
     public int NewGamePlusLevel { get; set; }
