@@ -5,7 +5,7 @@ using Player.Application.Features.HeroUseCase.ListHeroClasses;
 namespace Player.Presentation.Controllers;
 
 [ApiController]
-[Route("api/v1/hero-classes")]
+[Route("api/player/v1/hero-classes")]
 public sealed class HeroClassesController(ISender sender) : ControllerBase
 {
     [HttpGet]

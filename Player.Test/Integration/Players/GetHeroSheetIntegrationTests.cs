@@ -18,7 +18,7 @@ public sealed class GetHeroSheetIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, playerId, heroId));
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
-            $"/api/v1/players/{playerId}/heroes/{heroId}",
+            $"/api/player/v1/{playerId}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
@@ -49,7 +49,7 @@ public sealed class GetHeroSheetIntegrationTests(PlayerEndpointFixture fixture)
         await fixture.SeedAsync(context => SeedAsync(context, ownerId, heroId));
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
-            $"/api/v1/players/{Guid.NewGuid()}/heroes/{heroId}",
+            $"/api/player/v1/{Guid.NewGuid()}/heroes/{heroId}",
             TestContext.Current.CancellationToken
         );
 
