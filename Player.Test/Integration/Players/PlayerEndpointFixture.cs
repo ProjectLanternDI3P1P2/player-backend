@@ -9,18 +9,42 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
 {
     private TestDatabase? database;
     private PlayerWebApplicationFactory? factory;
+    private string? authenticatedExternalUserId;
 
     /// <summary>For tests that hold their own database locks next to the API.</summary>
     public string ConnectionString =>
         database?.ConnectionString
         ?? throw new InvalidOperationException("Fixture not initialized.");
 
-    public HttpClient HttpClient =>
-        factory?.CreateClient() ?? throw new InvalidOperationException("Fixture not initialized.");
+    public HttpClient HttpClient
+    {
+        get
+        {
+            HttpClient client =
+                factory?.CreateClient()
+                ?? throw new InvalidOperationException("Fixture not initialized.");
+            if (authenticatedExternalUserId is not null)
+            {
+                client.DefaultRequestHeaders.Add("X-User-Id", authenticatedExternalUserId);
+            }
 
-    public WebSocketClient CreateWebSocketClient() =>
-        factory?.Server.CreateWebSocketClient()
-        ?? throw new InvalidOperationException("Fixture not initialized.");
+            return client;
+        }
+    }
+
+    public WebSocketClient CreateWebSocketClient()
+    {
+        WebSocketClient client =
+            factory?.Server.CreateWebSocketClient()
+            ?? throw new InvalidOperationException("Fixture not initialized.");
+        if (authenticatedExternalUserId is not null)
+        {
+            client.ConfigureRequest = request =>
+                request.Headers["X-User-Id"] = authenticatedExternalUserId;
+        }
+
+        return client;
+    }
 
     public async Task SeedAsync(Func<PlayerDbContext, Task> seed)
     {
@@ -30,6 +54,21 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
         PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
         await seed(context);
+        List<Player.Domain.Entities.Player> newPlayers = context
+            .ChangeTracker.Entries<Player.Domain.Entities.Player>()
+            .Where(entry => entry.State == Microsoft.EntityFrameworkCore.EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToList();
+        foreach (
+            Player.Domain.Entities.Player player in newPlayers.Where(player =>
+                player.ExternalUserId is null
+            )
+        )
+        {
+            player.ExternalUserId = player.Id.ToString();
+        }
+
+        authenticatedExternalUserId = newPlayers.LastOrDefault()?.ExternalUserId;
         await context.SaveChangesAsync();
     }
 
@@ -52,6 +91,7 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
     {
         database = await TestDatabase.CreateAsync($"player_test_players_{Guid.NewGuid():N}");
         factory = new PlayerWebApplicationFactory(database.ConnectionString);
+        authenticatedExternalUserId = Guid.NewGuid().ToString();
         await database.ResetAsync();
     }
 

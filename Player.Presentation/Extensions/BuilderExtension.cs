@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using Player.Presentation.Authentication;
 using Player.Presentation.Configuration;
 using Player.Presentation.Extensions.LogExtension;
 using Player.Presentation.Grpc.Interceptors;
 using Player.Presentation.Hubs.Filters;
 using Player.Presentation.Middleware;
-using Player.Presentation.Authentication;
 using Serilog;
 
 namespace Player.Presentation.Extensions;

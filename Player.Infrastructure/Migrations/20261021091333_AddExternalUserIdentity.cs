@@ -15,26 +15,24 @@ namespace Player.Infrastructure.Migrations
                 table: "player",
                 type: "character varying(255)",
                 maxLength: 255,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_player_external_user_id",
                 table: "player",
                 column: "external_user_id",
                 unique: true,
-                filter: "external_user_id IS NOT NULL");
+                filter: "external_user_id IS NOT NULL"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_player_external_user_id",
-                table: "player");
+            migrationBuilder.DropIndex(name: "IX_player_external_user_id", table: "player");
 
-            migrationBuilder.DropColumn(
-                name: "external_user_id",
-                table: "player");
+            migrationBuilder.DropColumn(name: "external_user_id", table: "player");
         }
     }
 }

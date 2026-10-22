@@ -1,8 +1,8 @@
+using System.Text.Json;
 using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
-using System.Text.Json;
 using Player.Application.Features.GameSessionUseCase;
 using Player.Application.Features.GameSessionUseCase.CreateSoloLobby;
 using Player.Presentation.Authentication;

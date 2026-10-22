@@ -10,10 +10,7 @@ using Player.Presentation.Authentication;
 namespace Player.Presentation.Hubs;
 
 /// <summary>Gameplay boundary for Player-owned lobbies and game sessions.</summary>
-public sealed class PlayerHub(
-    ISender sender,
-    ICurrentPlayerResolver currentPlayer
-) : HubBase
+public sealed class PlayerHub(ISender sender, ICurrentPlayerResolver currentPlayer) : HubBase
 {
     public async Task<SessionCommandAcknowledgement> CreateSoloLobby(CreateSoloLobbyRequest command)
     {
@@ -93,19 +90,11 @@ public sealed class PlayerHub(
     internal static string GroupName(Guid sessionId) => $"session:{sessionId}";
 }
 
-public sealed record CreateSoloLobbyRequest(
-    Guid CommandId,
-    Guid HeroId,
-    string? DungeonSeed
-);
+public sealed record CreateSoloLobbyRequest(Guid CommandId, Guid HeroId, string? DungeonSeed);
 
 public sealed record StartSessionRequest(Guid CommandId, Guid SessionId);
 
-public sealed record ChangeSessionHeroRequest(
-    Guid CommandId,
-    Guid SessionId,
-    Guid HeroId
-);
+public sealed record ChangeSessionHeroRequest(Guid CommandId, Guid SessionId, Guid HeroId);
 
 public sealed record SessionSnapshotRequest(Guid SessionId);
 
