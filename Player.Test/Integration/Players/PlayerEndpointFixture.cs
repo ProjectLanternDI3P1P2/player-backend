@@ -46,6 +46,11 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         return client;
     }
 
+    public void AuthenticateAs(Guid externalUserId)
+    {
+        authenticatedExternalUserId = externalUserId.ToString();
+    }
+
     public async Task SeedAsync(Func<PlayerDbContext, Task> seed)
     {
         if (factory is null)
@@ -56,7 +61,6 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         await seed(context);
         List<Player.Domain.Entities.Player> newPlayers = context
             .ChangeTracker.Entries<Player.Domain.Entities.Player>()
-            .Where(entry => entry.State == Microsoft.EntityFrameworkCore.EntityState.Added)
             .Select(entry => entry.Entity)
             .ToList();
         foreach (

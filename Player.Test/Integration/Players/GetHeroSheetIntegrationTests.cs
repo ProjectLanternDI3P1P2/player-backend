@@ -47,6 +47,7 @@ public sealed class GetHeroSheetIntegrationTests(PlayerEndpointFixture fixture)
         Guid ownerId = Guid.NewGuid();
         Guid heroId = Guid.NewGuid();
         await fixture.SeedAsync(context => SeedAsync(context, ownerId, heroId));
+        fixture.AuthenticateAs(Guid.NewGuid());
 
         HttpResponseMessage response = await fixture.HttpClient.GetAsync(
             $"/api/player/v1/{Guid.NewGuid()}/heroes/{heroId}",
