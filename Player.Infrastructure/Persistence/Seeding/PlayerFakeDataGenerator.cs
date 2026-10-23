@@ -7,6 +7,7 @@ namespace Player.Infrastructure.Persistence.Seeding;
 public static class PlayerFakeDataGenerator
 {
     public static readonly Guid DemoPlayerId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+    public const string DemoExternalUserId = "00000000-0000-0000-0000-000000000010";
     public static readonly Guid DemoWarriorId = Guid.Parse("00000000-0000-0000-0000-000000000101");
     public static readonly Guid DemoShamanId = Guid.Parse("00000000-0000-0000-0000-000000000102");
     public static readonly Guid DemoMageId = Guid.Parse("00000000-0000-0000-0000-000000000103");
@@ -89,6 +90,7 @@ public static class PlayerFakeDataGenerator
         new()
         {
             Id = DemoPlayerId,
+            ExternalUserId = DemoExternalUserId,
             DisplayName = "MaelisRune",
             AccountStatus = "Active",
             NewGamePlusLevel = 2,

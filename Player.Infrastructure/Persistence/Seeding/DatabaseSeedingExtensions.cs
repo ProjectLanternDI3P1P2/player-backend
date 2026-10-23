@@ -14,6 +14,9 @@ public static class DatabaseSeedingExtensions
         PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
 
         await context.Database.MigrateAsync(cancellationToken);
-        await DataSeeder.SeedAsync(context, cancellationToken);
+        if (!await context.Players.AnyAsync(cancellationToken))
+        {
+            await DataSeeder.SeedAsync(context, cancellationToken);
+        }
     }
 }

@@ -451,6 +451,11 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("display_name");
 
+                    b.Property<string>("ExternalUserId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("external_user_id");
+
                     b.Property<int>("NewGamePlusLevel")
                         .HasColumnType("integer")
                         .HasColumnName("new_game_plus_level");
@@ -464,6 +469,10 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnName("selected_hero_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExternalUserId")
+                        .IsUnique()
+                        .HasFilter("external_user_id IS NOT NULL");
 
                     b.ToTable("player", (string)null);
                 });
