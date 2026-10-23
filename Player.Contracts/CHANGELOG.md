@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v3.0.0...contracts-v4.0.0) (2026-10-23)
+
+
+### Fixed
+
+* **player:** merge hero appearance with session changes ([5f96911](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/5f969118ab4ad17e16e5c7af7af303d0f15ecefd))
+
 ## [3.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v2.0.0...contracts-v3.0.0) (2026-09-30)
 
 
