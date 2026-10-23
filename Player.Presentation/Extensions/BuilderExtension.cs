@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using Player.Presentation.Authentication;
 using Player.Presentation.Configuration;
 using Player.Presentation.Extensions.LogExtension;
 using Player.Presentation.Grpc.Interceptors;
@@ -44,6 +45,7 @@ public static class BuilderExtension
         builder.Services.AddTransient<CorrelationIdInterceptor>();
         builder.Services.AddTransient<GrpcExceptionInterceptor>();
         builder.Services.AddTransient<SignalRCommandExceptionFilter>();
+        builder.Services.AddScoped<ICurrentPlayerResolver, CurrentPlayerResolver>();
         builder.Services.AddHttpClient();
 
         return builder;

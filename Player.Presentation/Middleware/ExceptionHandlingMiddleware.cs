@@ -14,6 +14,16 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
         {
             await next(context);
         }
+        catch (UnauthorizedException exception)
+        {
+            logger.Warning(exception, "Unauthorized request");
+            await WriteProblemDetailsAsync(
+                context,
+                exception.Message,
+                "Unauthorized",
+                StatusCodes.Status401Unauthorized
+            );
+        }
         catch (KeyNotFoundException exception)
         {
             logger.Warning(exception, "Resource not found");
