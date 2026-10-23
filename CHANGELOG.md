@@ -1,5 +1,52 @@
 # Changelog
 
+## [1.4.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.3.0...v1.4.0) (2026-10-23)
+
+
+### Added
+
+* **auth:** authorize player hub commands ([13a6cdf](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/13a6cdf4ebe25897e8bff6ff4af038e0c315bdff))
+* **auth:** link players to external identities ([e3ca636](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/e3ca63627090ed37b1b92699bc86d270ffbd15c3))
+* **auth:** resolve players from gateway identity ([19e7a15](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/19e7a15ee6f8af8fc1ee049fc1ecc69c02bd4045))
+* **migrations:** add migration-only command for GitOps jobs ([7f1d0f0](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/7f1d0f02b473f8ca79debdf2a6aa8c51f2441ef2))
+* **migrations:** add migration-only image command for GitOps ([dc28416](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/dc28416ca8d65389f798881a1939ecdd5af08185))
+* **player:** delete a hero (US-PLAYER-10) ([036806e](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/036806e90b9a41386167dbc7d422b63d31ab651a))
+* **player:** delete a hero (US-PLAYER-10) ([fe9a01d](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/fe9a01d64f7055fd7b107841c927175502ccb750))
+* **player:** namespace HTTP routes by service ([1207235](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/12072353125311ca6d4020f3c564f9aa899b3d33))
+* **player:** namespace HTTP routes by service ([186e05d](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/186e05d99ee13ec4040382a5c22192417005ff54))
+* **player:** reset development database ([b57b7a6](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/b57b7a6eedf4aed61cbe752d2aefe251271bd545))
+* **player:** reset development database ([d68a010](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/d68a01004e2cb99702aabe95147f016ea37115c8))
+* **player:** seed a stable demo roster ([b6c1fb0](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/b6c1fb065867eebbef8842152325b1c17b93e636))
+* **player:** seed a stable demo roster ([bbab886](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/bbab8862b1b3b7cfa0ca98835142ee7a21c4076a))
+* **player:** store the appearance chosen at hero creation ([e550c0d](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/e550c0d7207d2bc459ef8b5865088cc62ef65698))
+* separate package and local Docker builds ([34310f7](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/34310f7f78bb95c83a3aa37fd4cec7fe5fcbd173))
+* separate package and local Docker builds ([11db173](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/11db1734d05dba523c6dbbfa6de5a7b387a3b859))
+* **session:** start dungeon runs with replay seeds ([946d650](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/946d6509a2193088ac56008ee5b7e428fbad8324))
+* **session:** start dungeon runs with replay seeds ([ff5248f](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/ff5248f2e90e98a26444a46bd3b2704b005adcc5))
+
+
+### Fixed
+
+* align dungeon client coverage with contract ([31d3040](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/31d3040ecc6b405e147ad6a0aabd881f5202552d))
+* **auth:** keep legacy clients authenticated ([5362544](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/53625444333521b9094f6b9c611bec13dda92659))
+* **cd:** publish images through groupe7 Harbor domain ([a97e1ca](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/a97e1ca24813c21d44b657a8617b43b256f0b2e0))
+* **cd:** publish through Harbor 192.214.203.200:18443 ([fad90b5](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/fad90b58315e1567bf95f2644fb37b5c520687a5))
+* **cd:** publish through private Harbor 10.4.111.200:18443 ([9d74232](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/9d74232207e621d4f545d45081df95b12eb7a386))
+* **cd:** publish through private Harbor endpoint ([28b0639](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/28b06392c422d6c18035055863ad5cee397102bb))
+* **cd:** use shared workflow with new Harbor endpoint ([d65af74](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/d65af742df43764dc7c87f361b51caed1511d4f4))
+* ci ([d4b936b](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/d4b936b2e37e552aaa8c7ae6f0c7ce6e57b28897))
+* **ci:** authenticate GitHub Packages restores ([f1b7ef5](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/f1b7ef5b8bb02aca5d73b4c9b20778af1fbe966f))
+* **ci:** pin reusable workflow revision ([88a3e98](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/88a3e98900f59a1ab4d89d29675201c8d6722198))
+* **player:** lock the hero before its sessions when deleting it ([1f88234](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/1f8823489f880ddeb13ccc5c129e30853225bf53))
+* **player:** merge hero appearance with session changes ([5f96911](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/5f969118ab4ad17e16e5c7af7af303d0f15ecefd))
+* update contract version ([b278f00](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/b278f0097ecebf2170f632be656f17b0fca4ad26))
+
+
+### Changed
+
+* **player:** expose the hero's open session as one activeSession object ([c593730](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/c593730592d995fb0544237c34d62317104ddb45))
+* **session:** model lifecycle states as enums ([407e314](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/407e314047ff2765ec294ce1b48863abf46a1f9b))
+
 ## [1.3.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.2.0...v1.3.0) (2026-10-01)
 
 
