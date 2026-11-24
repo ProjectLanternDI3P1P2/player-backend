@@ -126,7 +126,8 @@ field errors using an `errors` dictionary.
 
 # API versioning policy
 
-All HTTP APIs begin with `/api/v1/...`.
+Player's client-facing HTTP APIs begin with `/api/player/v1/...`, so the gateway
+can route the service by prefix. See ADR 0019 for the transition of other services.
 
 Backward-compatible changes remain in the current major version.
 A breaking contract change requires a new major version.

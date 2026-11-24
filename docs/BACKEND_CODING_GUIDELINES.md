@@ -178,22 +178,22 @@ Use resource-oriented routes.
 Prefer:
 
 ```text
-GET    /api/v1/players/{playerId}
-POST   /api/v1/players
-PUT    /api/v1/players/{playerId}
-DELETE /api/v1/players/{playerId}
+GET    /api/player/v1/me/heroes
+POST   /api/player/v1/me/heroes
+GET    /api/player/v1/me/heroes/{heroId}
+DELETE /api/player/v1/me/heroes/{heroId}
 ```
 
 Avoid action-oriented routes such as:
 
 ```text
-POST /api/v1/createPlayer
-GET  /api/v1/getPlayer
+POST /api/player/v1/createHero
+GET  /api/player/v1/getHero
 ```
 
 Rules:
 
-- all APIs start at `/api/v1/...`;
+- Player APIs start at `/api/player/v1/...`;
 - route resources use lowercase plural nouns;
 - use explicit route identifiers when useful;
 - do not expose EF Core entities directly;
