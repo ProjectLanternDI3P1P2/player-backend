@@ -137,13 +137,23 @@ public sealed class ExceptionHandlingMiddleware(ILogger logger, IHostEnvironment
     private static async Task HandleConflictExceptionAsync(
         HttpContext context,
         ConflictException exception
-    ) =>
-        await WriteProblemDetailsAsync(
-            context,
-            exception.Message,
-            "Conflict",
-            StatusCodes.Status409Conflict
-        );
+    )
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = $"https://httpstatuses.com/{StatusCodes.Status409Conflict}",
+            Title = "Conflict",
+            Detail = exception.Message,
+            Status = StatusCodes.Status409Conflict,
+            Instance = context.Request.Path,
+        };
+        if (exception is HeroAlreadyInSessionException heroConflict)
+            problemDetails.Extensions["activeSessionId"] = heroConflict.ActiveSessionId;
+
+        context.Response.StatusCode = StatusCodes.Status409Conflict;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails, context.RequestAborted);
+    }
 
     private static async Task WriteProblemDetailsAsync(
         HttpContext context,
