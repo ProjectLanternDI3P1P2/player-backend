@@ -217,8 +217,10 @@ public sealed class GameSessionHandlersTests
                 }
             );
         repository
-            .Setup(x => x.HasOpenSessionAsync(replacementHeroId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(x =>
+                x.FindOpenSessionIdForHeroAsync(replacementHeroId, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync((Guid?)null);
         var handler = new ChangeSessionHeroCommandHandler(repository.Object, new FixedClock());
 
         GameSessionSnapshot result = await handler.Handle(
@@ -260,6 +262,73 @@ public sealed class GameSessionHandlersTests
         await action.Should().ThrowAsync<ConflictException>();
     }
 
+    [Fact]
+    public async Task CreateSoloLobby_WhenTheHeroHasAnOpenSession_IsRefusedWithTheOngoingSessionId()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid heroId = Guid.NewGuid();
+        Guid ongoingSessionId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, heroId);
+        repository
+            .Setup(x => x.FindOpenSessionIdForHeroAsync(heroId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ongoingSessionId);
+        var handler = new CreateSoloLobbyCommandHandler(repository.Object, new FixedClock());
+
+        Func<Task> action = () =>
+            handler.Handle(
+                new CreateSoloLobbyCommand(playerId, heroId, null, Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
+
+        (await action.Should().ThrowAsync<HeroAlreadyInSessionException>())
+            .Which.ActiveSessionId.Should()
+            .Be(ongoingSessionId);
+        repository.Verify(x => x.Add(It.IsAny<GameSession>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ChangeSessionHero_ToAHeroWithAnOpenSession_IsRefusedWithTheOngoingSessionId()
+    {
+        Guid playerId = Guid.NewGuid();
+        Guid previousHeroId = Guid.NewGuid();
+        Guid busyHeroId = Guid.NewGuid();
+        Guid sessionId = Guid.NewGuid();
+        Guid ongoingSessionId = Guid.NewGuid();
+        var repository = CreateRepository(playerId, previousHeroId);
+        repository
+            .Setup(x => x.GetByIdForUpdateAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Lobby(sessionId, playerId, previousHeroId));
+        repository
+            .Setup(x =>
+                x.GetActiveHeroForUpdateAsync(busyHeroId, playerId, It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                new Hero
+                {
+                    Id = busyHeroId,
+                    PlayerId = playerId,
+                    Name = "Morgana",
+                    ClassCode = "mage",
+                    Level = 2,
+                }
+            );
+        repository
+            .Setup(x => x.FindOpenSessionIdForHeroAsync(busyHeroId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ongoingSessionId);
+        var handler = new ChangeSessionHeroCommandHandler(repository.Object, new FixedClock());
+
+        Func<Task> action = () =>
+            handler.Handle(
+                new ChangeSessionHeroCommand(playerId, sessionId, busyHeroId, Guid.NewGuid()),
+                TestContext.Current.CancellationToken
+            );
+
+        (await action.Should().ThrowAsync<HeroAlreadyInSessionException>())
+            .Which.ActiveSessionId.Should()
+            .Be(ongoingSessionId);
+        repository.Verify(x => x.AddMember(It.IsAny<GameSessionMember>()), Times.Never);
+    }
+
     private static Mock<IGameSessionRepository> CreateRepository(Guid playerId, Guid heroId)
     {
         var repository = new Mock<IGameSessionRepository>();
@@ -281,8 +350,8 @@ public sealed class GameSessionHandlersTests
                 }
             );
         repository
-            .Setup(x => x.HasOpenSessionAsync(heroId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(x => x.FindOpenSessionIdForHeroAsync(heroId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
         return repository;
     }
 

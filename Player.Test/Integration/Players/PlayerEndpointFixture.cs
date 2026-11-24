@@ -94,6 +94,16 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         factory?.SetDungeonClient(client);
     }
 
+    /// <summary>Runs <paramref name="action"/> in its own DI scope, like a separate request.</summary>
+    public async Task<TResult> InScopeAsync<TResult>(Func<IServiceProvider, Task<TResult>> action)
+    {
+        if (factory is null)
+            throw new InvalidOperationException("Fixture not initialized.");
+
+        await using AsyncServiceScope scope = factory.Services.CreateAsyncScope();
+        return await action(scope.ServiceProvider);
+    }
+
     public async Task AssertAsync(Action<PlayerDbContext> assertion)
     {
         if (factory is null)
