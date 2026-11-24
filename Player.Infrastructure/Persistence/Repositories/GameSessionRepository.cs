@@ -65,17 +65,21 @@ public sealed class GameSessionRepository(PlayerDbContext dbContext) : IGameSess
             .ToListAsync(cancellationToken);
     }
 
-    public Task<bool> HasOpenSessionAsync(Guid heroId, CancellationToken cancellationToken) =>
-        dbContext.GameSessionMembers.AnyAsync(
-            member =>
+    public Task<Guid?> FindOpenSessionIdForHeroAsync(
+        Guid heroId,
+        CancellationToken cancellationToken
+    ) =>
+        dbContext
+            .GameSessionMembers.Where(member =>
                 member.HeroId == heroId
                 && member.MemberStatus == GameSessionMemberStatus.Active
                 && (
                     member.GameSession.Status == GameSessionStatus.Lobby
                     || member.GameSession.Status == GameSessionStatus.Active
-                ),
-            cancellationToken
-        );
+                )
+            )
+            .Select(member => (Guid?)member.SessionId)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public void Add(GameSession session) => dbContext.GameSessions.Add(session);
 
