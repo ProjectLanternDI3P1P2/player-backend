@@ -25,7 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="Protos/player_hero_v1.proto" GrpcServices="Both" />
     <Protobuf Include="Protos/message_envelope_v1.proto" GrpcServices="None" />
+    <None Include="Protos/player_hero_v1.proto" Pack="true" PackagePath="proto" />
     <None Include="Protos/message_envelope_v1.proto" Pack="true" PackagePath="proto" />
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>

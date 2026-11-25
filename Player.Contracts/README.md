@@ -14,6 +14,6 @@ version of the package:
 
 For a C# gRPC consumer, also reference `Grpc.Net.Client`, create a channel for the
 Player service's internal endpoint, then construct
-`Player.Contracts.V1.PlayerService.PlayerServiceClient`.
+`Player.Contracts.V1.PlayerHeroService.PlayerHeroServiceClient`.
 
 The original `.proto` source is included in this package under `proto/`.

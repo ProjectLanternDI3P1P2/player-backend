@@ -1,3 +1,4 @@
+using Grpc.Net.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Player.Application.Ports;
@@ -44,6 +45,18 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
         }
 
         return client;
+    }
+
+    /// <summary>A gRPC channel to the in-memory server, like another service calling Player.</summary>
+    public GrpcChannel CreateGrpcChannel()
+    {
+        HttpClient client =
+            factory?.CreateDefaultClient()
+            ?? throw new InvalidOperationException("Fixture not initialized.");
+        return GrpcChannel.ForAddress(
+            client.BaseAddress!,
+            new GrpcChannelOptions { HttpClient = client }
+        );
     }
 
     public void AuthenticateAs(Guid externalUserId)
