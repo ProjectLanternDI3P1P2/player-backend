@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v4.0.0...contracts-v5.0.0) (2026-11-25)
+
+
+### Added
+
+* **contracts:** add the hero appearance read contract ([2fa2bb0](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/2fa2bb0a8d1bed449d2397ec15e1477d1abe7f13))
+* **hero:** expose the hero appearance over gRPC ([c79069d](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/c79069dc27f183248181dfcdc49a2309920019a6))
+
 ## [4.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v3.0.0...contracts-v4.0.0) (2026-10-23)
 
 
