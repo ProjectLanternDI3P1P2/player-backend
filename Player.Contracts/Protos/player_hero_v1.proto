@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package player.v1;
+
+option csharp_namespace = "Player.Contracts.V1";
+
+// Version 1 of the synchronous, service-to-service hero read contract owned by
+// Player. Field numbers are permanent: do not reuse a deleted number, reserve it.
+service PlayerHeroService {
+  // Reads the appearance a player chose in the hero editor. Called by Dungeon
+  // when it loads a run, so a new appearance shows up on the next run.
+  rpc GetHeroAppearance (GetHeroAppearanceRequest) returns (HeroAppearanceReply);
+}
+
+message GetHeroAppearanceRequest {
+  // RFC 4122 textual UUID of the hero, owned by Player.
+  string hero_id = 1;
+}
+
+// Deliberately limited to the cosmetic choices consumers are allowed to render.
+message HeroAppearanceReply {
+  // RFC 4122 textual UUID of the hero.
+  string hero_id = 1;
+
+  // Skin tone variant chosen in the hero editor.
+  int32 skin_tone = 2;
+
+  // Hair style code chosen in the hero editor, for example "bald", "bob1" or "dap1".
+  string hair_style = 3;
+
+  // Hair color variant. Absent when the hero is bald.
+  optional int32 hair_color = 4;
+}
