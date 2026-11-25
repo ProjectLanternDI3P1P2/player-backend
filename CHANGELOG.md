@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.4.0...v1.5.0) (2026-11-25)
+
+
+### Added
+
+* **hero:** expose the hero appearance over gRPC ([c79069d](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/c79069dc27f183248181dfcdc49a2309920019a6))
+* **hero:** expose the hero appearance over gRPC ([65ff129](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/65ff1290ff475153f77ac650abf705760bc632d0))
+
 ## [1.4.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.3.0...v1.4.0) (2026-10-23)
 
 
