@@ -49,6 +49,8 @@ public static class PlayerFakeDataGenerator
                 Label = "Totem",
                 RequiredLevel = 1,
                 TargetingType = "SingleEnemy",
+                ManaCost = 5,
+                Power = 140,
             },
             new Skill
             {
@@ -57,6 +59,8 @@ public static class PlayerFakeDataGenerator
                 Label = "Strike",
                 RequiredLevel = 1,
                 TargetingType = "SingleEnemy",
+                ManaCost = 4,
+                Power = 150,
             },
             new Skill
             {
@@ -65,6 +69,8 @@ public static class PlayerFakeDataGenerator
                 Label = "Arcane Bolt",
                 RequiredLevel = 1,
                 TargetingType = "SingleEnemy",
+                ManaCost = 6,
+                Power = 170,
             },
         ];
 
