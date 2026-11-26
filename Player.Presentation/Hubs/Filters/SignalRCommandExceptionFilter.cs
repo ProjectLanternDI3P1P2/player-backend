@@ -44,7 +44,7 @@ public sealed record SignalRCommandRejection(bool Accepted, SignalRCommandError 
         new(false, SignalRCommandError.From(exception));
 }
 
-public sealed record SignalRCommandError(string Code, string Message)
+public sealed record SignalRCommandError(string Code, string Message, Guid? ActiveSessionId = null)
 {
     public static SignalRCommandError From(Exception exception) =>
         exception switch
@@ -53,6 +53,11 @@ public sealed record SignalRCommandError(string Code, string Message)
             KeyNotFoundException => new(
                 "RESOURCE_NOT_FOUND",
                 "The requested resource was not found."
+            ),
+            HeroAlreadyInSessionException conflict => new(
+                "COMMAND_CONFLICT",
+                conflict.Message,
+                conflict.ActiveSessionId
             ),
             ConflictException => new("COMMAND_CONFLICT", exception.Message),
             _ => new("COMMAND_FAILED", "The command could not be completed. Please retry."),

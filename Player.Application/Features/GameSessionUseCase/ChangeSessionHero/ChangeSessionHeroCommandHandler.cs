@@ -48,11 +48,15 @@ public sealed class ChangeSessionHeroCommandHandler(IGameSessionRepository repos
         );
         if (hero is null)
             throw new KeyNotFoundException($"Hero '{request.HeroId}' was not found.");
-        if (
-            hero.Id != currentMember.HeroId
-            && await repository.HasOpenSessionAsync(hero.Id, cancellationToken)
-        )
-            throw new ConflictException("This hero already has an open session.");
+        if (hero.Id != currentMember.HeroId)
+        {
+            Guid? openSessionId = await repository.FindOpenSessionIdForHeroAsync(
+                hero.Id,
+                cancellationToken
+            );
+            if (openSessionId is not null)
+                throw new HeroAlreadyInSessionException(hero.Id, openSessionId.Value);
+        }
 
         DateTimeOffset now = clock.UtcNow;
         if (hero.Id != currentMember.HeroId)

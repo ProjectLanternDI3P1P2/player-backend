@@ -43,6 +43,46 @@ public sealed class SignalRCommandExceptionFilterTests
             );
     }
 
+    [Fact]
+    public async Task InvokeMethodAsync_WhenTheHeroIsAlreadyInASession_ReturnsTheOngoingSessionId()
+    {
+        var context = new Mock<HubCallerContext>();
+        context.SetupGet(value => value.ConnectionAborted).Returns(CancellationToken.None);
+        var hub = new TestHub { Context = context.Object };
+        var invocation = new HubInvocationContext(
+            context.Object,
+            Mock.Of<IServiceProvider>(),
+            hub,
+            typeof(TestHub).GetMethod(nameof(TestHub.AnyCommand))!,
+            []
+        );
+        var filter = new SignalRCommandExceptionFilter(
+            Mock.Of<ILogger<SignalRCommandExceptionFilter>>()
+        );
+        var conflict = new Player.Domain.Exceptions.HeroAlreadyInSessionException(
+            Guid.NewGuid(),
+            Guid.NewGuid()
+        );
+
+        object? result = await filter.InvokeMethodAsync(
+            invocation,
+            _ => ValueTask.FromException<object?>(conflict)
+        );
+
+        result
+            .Should()
+            .Be(
+                new SignalRCommandRejection(
+                    false,
+                    new SignalRCommandError(
+                        "COMMAND_CONFLICT",
+                        conflict.Message,
+                        conflict.ActiveSessionId
+                    )
+                )
+            );
+    }
+
     private sealed class TestHub : Hub
     {
         public Task AnyCommand() => Task.CompletedTask;
