@@ -57,8 +57,12 @@ public sealed class CreateSoloLobbyCommandHandler(IGameSessionRepository reposit
                 cancellationToken
             );
 
-        if (await repository.HasOpenSessionAsync(hero.Id, cancellationToken))
-            throw new ConflictException("This hero already has an open session.");
+        Guid? openSessionId = await repository.FindOpenSessionIdForHeroAsync(
+            hero.Id,
+            cancellationToken
+        );
+        if (openSessionId is not null)
+            throw new HeroAlreadyInSessionException(hero.Id, openSessionId.Value);
 
         DateTimeOffset now = clock.UtcNow;
         var session = new GameSession

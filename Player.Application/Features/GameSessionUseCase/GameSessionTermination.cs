@@ -5,7 +5,8 @@ using Player.Domain.Repositories;
 namespace Player.Application.Features.GameSessionUseCase;
 
 /// <summary>
-/// Single place that moves a session to a terminal state and releases its heroes.
+/// Single place that moves a session to a terminal state (victory, defeat, abandonment,
+/// failure, repair) and releases its heroes so that they can join a new session.
 /// Meant to be shared by hero deletion (US-PLAYER-10) and abandon/close (US-PLAYER-16/17).
 /// </summary>
 public static class GameSessionTermination
@@ -19,6 +20,11 @@ public static class GameSessionTermination
         DateTimeOffset now
     )
     {
+        if (!terminalStatus.IsTerminal())
+            throw new ArgumentException(
+                $"'{terminalStatus}' is not a terminal session status.",
+                nameof(terminalStatus)
+            );
         if (session.EndedAt is not null)
             return;
 
