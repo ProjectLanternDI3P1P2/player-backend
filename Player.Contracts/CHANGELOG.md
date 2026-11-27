@@ -1,5 +1,12 @@
 # Changelog
 
+## [7.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v6.0.0...contracts-v7.0.0) (2026-11-27)
+
+
+### Fixed
+
+* **cd:** sign the image before pushing it to Harbor ([81c80cd](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/81c80cd93677476947c491ee6a289bc8be95e24e))
+
 ## [6.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v5.0.0...contracts-v6.0.0) (2026-11-27)
 
 
