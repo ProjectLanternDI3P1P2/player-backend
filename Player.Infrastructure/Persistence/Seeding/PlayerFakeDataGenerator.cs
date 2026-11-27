@@ -73,6 +73,10 @@ public static class PlayerFakeDataGenerator
             .UseSeed(417)
             .RuleFor(player => player.Id, _ => Guid.NewGuid())
             .RuleFor(player => player.DisplayName, faker => faker.Internet.UserName())
+            .RuleFor(
+                player => player.PublicHandle,
+                (_, player) => PlayerPublicHandle.Create(player.DisplayName, player.Id)
+            )
             .RuleFor(player => player.AccountStatus, _ => "Active")
             .RuleFor(player => player.NewGamePlusLevel, faker => faker.Random.Int(0, 3))
             .RuleFor(
@@ -92,6 +96,7 @@ public static class PlayerFakeDataGenerator
             Id = DemoPlayerId,
             ExternalUserId = DemoExternalUserId,
             DisplayName = "MaelisRune",
+            PublicHandle = PlayerPublicHandle.Create("MaelisRune", DemoPlayerId),
             AccountStatus = "Active",
             NewGamePlusLevel = 2,
             NewGamePlusUpdatedAt = now,

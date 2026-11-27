@@ -19,7 +19,7 @@ Les références vers Dungeon ou l'identité technique sont des identifiants ou 
 
 | Entité | Attributs principaux | Rôle |
 | --- | --- | --- |
-| `PLAYER` | `player_id` (PK), `display_name`, `account_status`, `new_game_plus_level`, dates de création et d'anonymisation | Profil et identité métier du joueur. |
+| `PLAYER` | `player_id` (PK), `display_name`, `public_handle` (unique), `account_status`, `new_game_plus_level`, dates de création et d'anonymisation | Profil et identité métier du joueur. `public_handle` (US-PLAYER-06) est l'identifiant public d'URL : `[a-z0-9-]`, 32 caractères max, dérivé une fois du `display_name` et des 8 premiers caractères hex de l'id (`PlayerPublicHandle.Create`), immuable. |
 | `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), nom, niveau, caractéristiques, apparence (`skin_tone`, `hair_style`, `hair_color`), suppression logique | Héros appartenant à un joueur. |
 | `HERO_CLASS` | `class_code` (PK), libellé, PV et mana de base | Archétype d'un héros. |
 | `SKILL` | `skill_code` (PK), `class_code` (FK), libellé, niveau requis, type de ciblage | Compétence proposée par une classe. |

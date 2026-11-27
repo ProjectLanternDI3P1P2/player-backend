@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Player.Domain.Entities;
 using Player.Domain.Exceptions;
 using Player.Domain.Services;
 using Player.Infrastructure.Persistence;
@@ -37,13 +38,15 @@ public sealed class CurrentPlayerResolver(PlayerDbContext dbContext, IClock cloc
         //TODO: Supprimer ça : Création du player à la création du compte keycloak plutôt qu'à un appel random
         string? username = context?.Request.Headers[UsernameHeader].FirstOrDefault()?.Trim();
         Guid playerId = Guid.NewGuid();
+        string displayName = string.IsNullOrWhiteSpace(username)
+            ? $"Player-{playerId.ToString("N")[..8]}"
+            : username[..Math.Min(username.Length, 100)];
         player = new PlayerEntity
         {
             Id = playerId,
             ExternalUserId = externalUserId,
-            DisplayName = string.IsNullOrWhiteSpace(username)
-                ? $"Player-{playerId.ToString("N")[..8]}"
-                : username[..Math.Min(username.Length, 100)],
+            DisplayName = displayName,
+            PublicHandle = PlayerPublicHandle.Create(displayName, playerId),
             AccountStatus = "Active",
             CreatedAt = clock.UtcNow,
         };

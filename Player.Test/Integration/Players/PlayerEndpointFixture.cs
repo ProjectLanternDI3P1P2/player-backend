@@ -85,6 +85,19 @@ public sealed class PlayerEndpointFixture : IAsyncLifetime
             player.ExternalUserId = player.Id.ToString();
         }
 
+        // Public handles are unique: give one to every player a test did not name explicitly.
+        foreach (
+            Player.Domain.Entities.Player player in newPlayers.Where(player =>
+                player.PublicHandle.Length == 0
+            )
+        )
+        {
+            player.PublicHandle = Player.Domain.Entities.PlayerPublicHandle.Create(
+                player.DisplayName,
+                player.Id
+            );
+        }
+
         authenticatedExternalUserId = newPlayers.LastOrDefault()?.ExternalUserId;
         await context.SaveChangesAsync();
     }

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Player.Domain.Entities;
 using Player.Infrastructure.Persistence;
 using Player.Infrastructure.Persistence.Seeding;
 
@@ -25,6 +26,15 @@ public sealed class DataSeederTests
             );
 
         demoPlayer.DisplayName.Should().Be("MaelisRune");
+        demoPlayer.PublicHandle.Should().Be("maelisrune-00000000");
+        (
+            await context
+                .Players.Select(player => player.PublicHandle)
+                .ToListAsync(TestContext.Current.CancellationToken)
+        )
+            .Should()
+            .OnlyHaveUniqueItems()
+            .And.NotContain(string.Empty);
         demoPlayer.SelectedHeroId.Should().Be(PlayerFakeDataGenerator.DemoMageId);
         demoPlayer.Heroes.Should().HaveCount(3);
         demoPlayer

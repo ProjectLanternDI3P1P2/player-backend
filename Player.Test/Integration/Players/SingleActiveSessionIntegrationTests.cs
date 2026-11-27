@@ -207,6 +207,10 @@ public sealed class SingleActiveSessionIntegrationTests(PlayerEndpointFixture fi
                 {
                     Id = playerId,
                     DisplayName = "single-session-player",
+                    PublicHandle = Player.Domain.Entities.PlayerPublicHandle.Create(
+                        "single-session-player",
+                        playerId
+                    ),
                     AccountStatus = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
                 }
