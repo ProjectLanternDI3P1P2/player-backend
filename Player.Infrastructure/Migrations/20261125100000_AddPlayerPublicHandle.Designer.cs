@@ -118,7 +118,10 @@ namespace Player.Infrastructure.Migrations
 
                     b.HasKey("SessionId", "HeroId");
 
-                    b.HasIndex("HeroId");
+                    b.HasIndex("HeroId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_game_session_member_hero_id_active")
+                        .HasFilter("member_status = 'Active'");
 
                     b.ToTable("game_session_member", (string)null);
                 });
