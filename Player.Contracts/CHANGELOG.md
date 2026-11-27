@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v6.0.0...contracts-v1.6.2) (2026-11-27)
+
+
+### Internal
+
+* release 1.6.2 ([679fc29](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/679fc293869f67f51bb17d48a7fbdd5f89cc6564))
+
 ## [6.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v5.0.0...contracts-v6.0.0) (2026-11-27)
 
 
