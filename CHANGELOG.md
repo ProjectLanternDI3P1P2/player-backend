@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.6.0...v1.6.1) (2026-11-27)
+
+
+### Fixed
+
+* **docker:** force build platform to linux/amd64 ([071f033](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/071f0338055a296d7816e5cbba5478fd540f7c8d))
+* **docker:** force build platform to linux/amd64 ([31c022e](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/31c022eb9af059e97206db5a035b1e00e32a330b))
+* **player:** set hero combat defense to 0 ([070fb94](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/070fb945c3d597b546ac024bf9eb857bc9622b8d))
+
 ## [1.6.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.5.0...v1.6.0) (2026-11-26)
 
 
