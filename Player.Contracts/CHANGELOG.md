@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v5.0.0...contracts-v6.0.0) (2026-11-27)
+
+
+### Added
+
+* **contracts:** add GetCombatantSnapshot to the hero contract ([0494321](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/0494321226fe32cefd1456481c103d983f10659b))
+
 ## [5.0.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/contracts-v4.0.0...contracts-v5.0.0) (2026-11-25)
 
 
