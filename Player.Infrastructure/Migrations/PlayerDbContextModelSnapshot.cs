@@ -464,6 +464,12 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("new_game_plus_updated_at");
 
+                    b.Property<string>("PublicHandle")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("public_handle");
+
                     b.Property<Guid?>("SelectedHeroId")
                         .HasColumnType("uuid")
                         .HasColumnName("selected_hero_id");
@@ -473,6 +479,9 @@ namespace Player.Infrastructure.Migrations
                     b.HasIndex("ExternalUserId")
                         .IsUnique()
                         .HasFilter("external_user_id IS NOT NULL");
+
+                    b.HasIndex("PublicHandle")
+                        .IsUnique();
 
                     b.ToTable("player", (string)null);
                 });

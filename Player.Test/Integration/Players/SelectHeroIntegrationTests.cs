@@ -69,6 +69,7 @@ public sealed class SelectHeroIntegrationTests(PlayerEndpointFixture fixture)
             {
                 Id = playerId,
                 DisplayName = "test-player",
+                PublicHandle = PlayerPublicHandle.Create("test-player", playerId),
                 AccountStatus = "Active",
                 CreatedAt = DateTimeOffset.UtcNow,
             },

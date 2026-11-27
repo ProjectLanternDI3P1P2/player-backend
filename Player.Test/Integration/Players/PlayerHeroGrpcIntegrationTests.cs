@@ -119,6 +119,7 @@ public sealed class PlayerHeroGrpcIntegrationTests(PlayerEndpointFixture fixture
                 {
                     Id = playerId,
                     DisplayName = "hero-grpc-player",
+                    PublicHandle = PlayerPublicHandle.Create("hero-grpc-player", playerId),
                     AccountStatus = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
                 }

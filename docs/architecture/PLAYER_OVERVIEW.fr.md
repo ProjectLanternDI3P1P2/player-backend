@@ -34,7 +34,23 @@ Même avec un jeton valide, un joueur ne peut pas accéder au héros, à la sess
 
 ## 2. Compte et profil
 
-Player est la source de vérité de l'identité métier du joueur. Il possède le `UserId`, le nom d'utilisateur, l'avatar, les informations de profil et les informations générales du compte. Ces données sont notamment disponibles sous `/api/player/...`.
+Player est la source de vérité de l'identité métier du joueur. Il possède le `UserId`, le nom affiché, le handle public, le niveau NG+ et le statut du compte (il n'y a pas encore d'avatar ni d'autres informations de profil en base). Ces données sont notamment disponibles sous `/api/player/...`.
+
+### Profil public (US-PLAYER-06)
+
+Exception à la règle d'identité de la section 1 : le profil public est servi **sans identité**. Le contrôleur `PublicProfilesController` n'utilise pas `ICurrentPlayerResolver` (qui exige `X-User-Id` et crée le joueur) et ne lit aucun en-tête `X-User-Id`, `X-Username` ou `X-Roles`.
+
+| Route | Rôle |
+| --- | --- |
+| `GET`/`HEAD /api/player/v1/players/{playerId:guid}/public-profile` | Profil public par id. |
+| `GET`/`HEAD /api/player/v1/players/by-handle/{handle}/public-profile` | Profil public par handle (insensible à la casse). |
+
+- **Champs exposés** : `playerId`, `publicHandle`, `displayName`, `newGamePlusLevel`, `heroes[]` (`name`, `classCode`, `className`, `level`, héros non supprimés, triés par niveau décroissant puis nom), `counters` (`heroCount`, `highestHeroLevel`, `completedSessionCount`). Jamais `ExternalUserId`, statut, dates, stats ni apparence. Un test de sérialisation verrouille cette liste.
+- **`completedSessionCount`** compte les `GameSession` au statut `Completed` jouées par un héros du joueur, héros supprimés compris. Il vaut 0 tant que rien ne pose `Completed`.
+- **404 uniforme** (ProblemDetails) pour un joueur inconnu, anonymisé (`anonymized_at` renseigné), au statut différent de `Active`, ou un handle mal formé (sans requête en base) : on ne peut pas énumérer les comptes.
+- **Cache** : 200 → `Cache-Control: public, max-age=60, stale-while-revalidate=300` ; 404 → `Cache-Control: public, max-age=60`.
+- **Gateway** : ces deux routes doivent être ouvertes sans JWT dans Traefik (dev et prod), et rien de plus large sous `/api/player/`.
+- **Handle** : généré à la création du joueur et rempli pour les joueurs existants par la migration `AddPlayerPublicHandle` (même règle en SQL, voir `PlayerPublicHandle`). Le backfill suppose une base Postgres encodée en UTF8 (`normalize`).
 
 Les autres services peuvent consulter Player lorsqu'ils doivent afficher l'identité d'un joueur. Par exemple, Rewards ou Progression peut connaître un `UserId` et demander à Player le nom du joueur associé.
 

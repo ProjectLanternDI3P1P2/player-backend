@@ -19,7 +19,7 @@ Dungeon references and technical identity data are external identifiers or claim
 
 | Entity | Main attributes | Purpose |
 | --- | --- | --- |
-| `PLAYER` | `player_id` (PK), `display_name`, `account_status`, `new_game_plus_level`, creation and anonymization timestamps | The player's business profile and identity. |
+| `PLAYER` | `player_id` (PK), `display_name`, `public_handle` (unique), `account_status`, `new_game_plus_level`, creation and anonymization timestamps | The player's business profile and identity. `public_handle` (US-PLAYER-06) is the public URL identifier: `[a-z0-9-]`, at most 32 characters, derived once from `display_name` and the first 8 hex digits of the id (`PlayerPublicHandle.Create`), immutable. |
 | `HERO` | `hero_id` (PK), `player_id` (FK), `class_code` (FK), name, level, attributes, appearance (`skin_tone`, `hair_style`, `hair_color`), soft deletion | A hero owned by a player. |
 | `HERO_CLASS` | `class_code` (PK), label, base health and mana | Hero archetype. |
 | `SKILL` | `skill_code` (PK), `class_code` (FK), label, required level, targeting type | A skill offered by a class. |

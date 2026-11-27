@@ -37,11 +37,13 @@ public sealed class DevelopmentDatabaseEndpointTests : IAsyncLifetime
         await using (AsyncServiceScope scope = factory!.Services.CreateAsyncScope())
         {
             PlayerDbContext context = scope.ServiceProvider.GetRequiredService<PlayerDbContext>();
+            Guid temporaryPlayerId = Guid.NewGuid();
             context.AddRange(
                 new PlayerEntity
                 {
-                    Id = Guid.NewGuid(),
+                    Id = temporaryPlayerId,
                     DisplayName = "temporary-player",
+                    PublicHandle = PlayerPublicHandle.Create("temporary-player", temporaryPlayerId),
                     AccountStatus = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
                 },

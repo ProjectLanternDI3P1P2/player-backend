@@ -27,9 +27,25 @@ A valid token never permits access to another player's hero, session, SignalR gr
 
 ## 2. Account and profile
 
-Player is the source of truth for business player identity: `UserId`, username, avatar, profile information, and general account information. These details are exposed through `/api/player/...`.
+Player is the source of truth for business player identity: `UserId`, display name, public handle, NG+ level, and account status (there is no avatar or other profile data in the database yet). These details are exposed through `/api/player/...`.
 
 Other services may query Player when they need to display a player's identity. For example, Rewards or Progression can know a `UserId` and ask Player for its display name. Player provides identity only; it does not own inventory, equipment, or progression.
+
+### Public profile (US-PLAYER-06)
+
+An exception to the identity rule of section 1: the public profile is served **without identity**. `PublicProfilesController` does not use `ICurrentPlayerResolver` (which requires `X-User-Id` and creates the player) and reads no `X-User-Id`, `X-Username`, or `X-Roles` header.
+
+| Route | Purpose |
+| --- | --- |
+| `GET`/`HEAD /api/player/v1/players/{playerId:guid}/public-profile` | Public profile by id. |
+| `GET`/`HEAD /api/player/v1/players/by-handle/{handle}/public-profile` | Public profile by handle (case-insensitive). |
+
+- **Exposed fields**: `playerId`, `publicHandle`, `displayName`, `newGamePlusLevel`, `heroes[]` (`name`, `classCode`, `className`, `level`; non-deleted heroes, sorted by level descending then name), `counters` (`heroCount`, `highestHeroLevel`, `completedSessionCount`). Never `ExternalUserId`, status, timestamps, stats, or appearance. A serialization test locks this list.
+- **`completedSessionCount`** counts `Completed` game sessions joined by any of the player's heroes, deleted heroes included. It stays 0 until something sets `Completed`.
+- **Uniform 404** (ProblemDetails) for an unknown, anonymized (`anonymized_at` set), or non-`Active` player, or a malformed handle (no database lookup): accounts cannot be enumerated.
+- **Caching**: 200 → `Cache-Control: public, max-age=60, stale-while-revalidate=300`; 404 → `Cache-Control: public, max-age=60`.
+- **Gateway**: both routes must be open without a JWT in Traefik (dev and prod), and nothing broader under `/api/player/`.
+- **Handle**: generated when the player is created and backfilled for existing players by the `AddPlayerPublicHandle` migration (same rule in SQL, see `PlayerPublicHandle`). The backfill assumes a UTF8-encoded Postgres database (`normalize`).
 
 ## 3. Heroes
 
