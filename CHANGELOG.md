@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.5.0...v1.6.0) (2026-11-26)
+
+
+### Added
+
+* **logging:** emit structured container logs ([be89aa4](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/be89aa457998351531f573797fb1b2c59f2a1d70))
+* **logging:** emit structured JSON container logs ([ef9fae3](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/ef9fae3a64c4ab7b3b480cd5660485c5be0489e6))
+* **session:** guarantee a single active session per hero ([f251943](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/f251943439038b78725ffbf82db85ed96c699c1c))
+
 ## [1.5.0](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.4.0...v1.5.0) (2026-11-25)
 
 
