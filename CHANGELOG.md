@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.6.1...v1.6.2) (2026-11-27)
+
+
+### Fixed
+
+* **cd:** sign the image before pushing it to Harbor ([fd1de87](https://github.com/ProjectLanternDI3P1P2/player-backend/commit/fd1de8714ee2b0c6e5ef891af054534e23a11692))
+
 ## [1.6.1](https://github.com/ProjectLanternDI3P1P2/player-backend/compare/v1.6.0...v1.6.1) (2026-11-27)
 
 
