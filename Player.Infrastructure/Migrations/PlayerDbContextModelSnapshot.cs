@@ -499,6 +499,18 @@ namespace Player.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("label");
 
+                    b.Property<int>("ManaCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("mana_cost");
+
+                    b.Property<int>("Power")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(100)
+                        .HasColumnName("power");
+
                     b.Property<int>("RequiredLevel")
                         .HasColumnType("integer")
                         .HasColumnName("required_level");

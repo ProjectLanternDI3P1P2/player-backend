@@ -93,6 +93,107 @@ public sealed class PlayerHeroGrpcIntegrationTests(PlayerEndpointFixture fixture
             .Be(StatusCode.InvalidArgument);
     }
 
+    [Fact]
+    public async Task GetCombatantSnapshot_HeroWithASkill_ReturnsStatsAbilitiesAndAppearance()
+    {
+        Guid heroId = await SeedHeroAsync(skinTone: 6, hairStyle: "dap1", hairColor: 9);
+        string skillCode = await SeedSkillAsync(heroId);
+
+        CombatantSnapshotReply reply = await GetCombatantAsync(heroId.ToString());
+
+        reply.HeroId.Should().Be(heroId.ToString());
+        reply.Name.Should().Be("Merlin");
+        reply.Level.Should().Be(1);
+        reply.MaxHp.Should().Be(45 + (10 * 6));
+        reply.CurrentHp.Should().Be(reply.MaxHp);
+        reply.MaxMana.Should().Be(20 * 3);
+        reply.Attack.Should().Be(4);
+        reply.Defense.Should().Be(0);
+        reply.Speed.Should().Be(12);
+        reply.Abilities.Should().ContainSingle(ability => ability.Code == skillCode);
+        reply.Abilities[0].ManaCost.Should().Be(6);
+        reply.Abilities[0].Power.Should().Be(170);
+        reply.Appearance.SkinTone.Should().Be(6);
+        reply.Appearance.HairColor.Should().Be(9);
+    }
+
+    [Fact]
+    public async Task GetCombatantSnapshot_DeletedHero_ReturnsNotFound()
+    {
+        Guid heroId = await SeedHeroAsync();
+        await fixture.SeedAsync(async context =>
+        {
+            await context
+                .Heroes.Where(hero => hero.Id == heroId)
+                .ExecuteUpdateAsync(setters =>
+                    setters
+                        .SetProperty(hero => hero.IsDeleted, true)
+                        .SetProperty(hero => hero.DeletedAt, DateTimeOffset.UtcNow)
+                );
+        });
+
+        Func<Task> action = () => GetCombatantAsync(heroId.ToString());
+
+        (await action.Should().ThrowAsync<RpcException>())
+            .Which.StatusCode.Should()
+            .Be(StatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetCombatantSnapshot_UnknownHero_ReturnsNotFound()
+    {
+        Func<Task> action = () => GetCombatantAsync(Guid.NewGuid().ToString());
+
+        (await action.Should().ThrowAsync<RpcException>())
+            .Which.StatusCode.Should()
+            .Be(StatusCode.NotFound);
+    }
+
+    private async Task<CombatantSnapshotReply> GetCombatantAsync(string heroId)
+    {
+        using GrpcChannel channel = fixture.CreateGrpcChannel();
+        var client = new PlayerHeroService.PlayerHeroServiceClient(channel);
+        return await client.GetCombatantSnapshotAsync(
+            new GetCombatantSnapshotRequest { HeroId = heroId },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+    }
+
+    private async Task<string> SeedSkillAsync(Guid heroId)
+    {
+        string skillCode = $"bolt-{heroId:N}";
+        await fixture.SeedAsync(async context =>
+        {
+            string classCode = await context
+                .Heroes.Where(hero => hero.Id == heroId)
+                .Select(hero => hero.ClassCode)
+                .SingleAsync();
+            context.Skills.Add(
+                new Skill
+                {
+                    Code = skillCode,
+                    ClassCode = classCode,
+                    Label = "Arcane Bolt",
+                    RequiredLevel = 1,
+                    TargetingType = "SingleEnemy",
+                    ManaCost = 6,
+                    Power = 170,
+                }
+            );
+            context.HeroSkills.Add(
+                new HeroSkill
+                {
+                    HeroId = heroId,
+                    SkillCode = skillCode,
+                    IsActive = true,
+                    UnlockedAt = DateTimeOffset.UtcNow,
+                }
+            );
+            await context.SaveChangesAsync();
+        });
+        return skillCode;
+    }
+
     private async Task<HeroAppearanceReply> GetAppearanceAsync(string heroId)
     {
         using GrpcChannel channel = fixture.CreateGrpcChannel();
@@ -138,6 +239,10 @@ public sealed class PlayerHeroGrpcIntegrationTests(PlayerEndpointFixture fixture
                 ClassCode = classCode,
                 Name = "Merlin",
                 Level = 1,
+                Strength = 4,
+                Endurance = 10,
+                Agility = 12,
+                Intelligence = 20,
                 CreatedAt = DateTimeOffset.UtcNow,
             };
             if (skinTone is not null)

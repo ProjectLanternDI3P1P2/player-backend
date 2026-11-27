@@ -15,6 +15,8 @@ public sealed class SkillConfiguration : IEntityTypeConfiguration<Skill>
         builder.Property(x => x.Label).HasColumnName("label").HasMaxLength(100);
         builder.Property(x => x.RequiredLevel).HasColumnName("required_level");
         builder.Property(x => x.TargetingType).HasColumnName("targeting_type").HasMaxLength(50);
+        builder.Property(x => x.ManaCost).HasColumnName("mana_cost").HasDefaultValue(0);
+        builder.Property(x => x.Power).HasColumnName("power").HasDefaultValue(100);
         builder
             .HasOne(x => x.HeroClass)
             .WithMany(x => x.Skills)

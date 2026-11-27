@@ -48,6 +48,14 @@ public sealed class HeroRepository(PlayerDbContext dbContext) : IHeroRepository
             .Include(x => x.HeroSkills)
             .SingleOrDefaultAsync(x => x.Id == heroId, cancellationToken);
 
+    public Task<Hero?> GetCombatantByIdAsync(Guid heroId, CancellationToken cancellationToken) =>
+        dbContext
+            .Heroes.AsNoTracking()
+            .Include(x => x.HeroClass)
+            .Include(x => x.HeroSkills)
+                .ThenInclude(x => x.Skill)
+            .SingleOrDefaultAsync(x => x.Id == heroId, cancellationToken);
+
     public Task<Hero?> GetActiveByIdAndPlayerIdAsync(
         Guid heroId,
         Guid playerId,

@@ -13,6 +13,9 @@ public interface IHeroRepository
     Task<Guid?> GetSelectedHeroIdAsync(Guid playerId, CancellationToken cancellationToken);
     Task<IdempotencyKey?> GetIdempotencyKeyAsync(Guid key, CancellationToken cancellationToken);
     Task<Hero?> GetHeroByIdAsync(Guid heroId, CancellationToken cancellationToken);
+
+    /// <summary>Read-only hero with its class and unlocked skills, deleted or not.</summary>
+    Task<Hero?> GetCombatantByIdAsync(Guid heroId, CancellationToken cancellationToken);
     Task<Hero?> GetActiveByIdAndPlayerIdAsync(
         Guid heroId,
         Guid playerId,
