@@ -29,7 +29,7 @@ public sealed class GetCombatantSnapshotQueryHandlerTests
         snapshot.MaxHp.Should().Be(156);
         snapshot.MaxMana.Should().Be(21);
         snapshot.Attack.Should().Be(18);
-        snapshot.Defense.Should().Be(8);
+        snapshot.Defense.Should().Be(0);
         snapshot.Speed.Should().Be(9);
         snapshot.Appearance.Should().Be(new HeroAppearance(4, "bob1", 3));
     }

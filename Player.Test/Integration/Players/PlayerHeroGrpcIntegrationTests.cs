@@ -108,7 +108,7 @@ public sealed class PlayerHeroGrpcIntegrationTests(PlayerEndpointFixture fixture
         reply.CurrentHp.Should().Be(reply.MaxHp);
         reply.MaxMana.Should().Be(20 * 3);
         reply.Attack.Should().Be(4);
-        reply.Defense.Should().Be(5);
+        reply.Defense.Should().Be(0);
         reply.Speed.Should().Be(12);
         reply.Abilities.Should().ContainSingle(ability => ability.Code == skillCode);
         reply.Abilities[0].ManaCost.Should().Be(6);

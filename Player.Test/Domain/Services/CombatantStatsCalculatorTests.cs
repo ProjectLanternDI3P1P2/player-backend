@@ -15,7 +15,7 @@ public sealed class CombatantStatsCalculatorTests
 
         stats
             .Should()
-            .Be(new CombatantStats(MaxHp: 156, MaxMana: 21, Attack: 18, Defense: 8, Speed: 9));
+            .Be(new CombatantStats(MaxHp: 156, MaxMana: 21, Attack: 18, Defense: 0, Speed: 9));
     }
 
     [Theory]
@@ -31,7 +31,7 @@ public sealed class CombatantStatsCalculatorTests
         stats.Attack.Should().Be(20);
         stats.MaxHp.Should().Be(99);
         stats.MaxMana.Should().Be(60);
-        stats.Defense.Should().Be(4);
+        stats.Defense.Should().Be(0);
         stats.Speed.Should().Be(14);
     }
 

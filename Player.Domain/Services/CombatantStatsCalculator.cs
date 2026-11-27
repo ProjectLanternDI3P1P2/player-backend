@@ -36,7 +36,7 @@ public static class CombatantStatsCalculator
             maxHp,
             maxMana,
             Math.Max(0, attack),
-            Math.Max(0, hero.Endurance / 2),
+            Defense: 0, // heroes have no defense attribute; field kept for the Combat contract
             Math.Max(0, hero.Agility)
         );
     }

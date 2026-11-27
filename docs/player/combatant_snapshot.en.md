@@ -22,7 +22,7 @@ Isolated in `Player.Domain.Services.CombatantStatsCalculator`; the balance is ex
 | `max_hp` | `HeroClass.BaseHealth + Endurance × 6` (same as the hero sheet) |
 | `max_mana` | `HeroClass.BaseMana + Intelligence × 3` |
 | `attack` | `Strength` for warrior, `Intelligence` for mage and shaman |
-| `defense` | `Endurance / 2` (rounded down) |
+| `defense` | Always `0`: heroes have no defense attribute |
 | `speed` | `Agility` |
 
 Values are never negative; `max_hp` is at least 1.
