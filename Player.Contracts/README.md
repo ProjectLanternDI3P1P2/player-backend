@@ -17,3 +17,10 @@ Player service's internal endpoint, then construct
 `Player.Contracts.V1.PlayerHeroService.PlayerHeroServiceClient`.
 
 The original `.proto` source is included in this package under `proto/`.
+
+## Services
+
+| RPC | Consumer | Purpose |
+| --- | --- | --- |
+| `PlayerHeroService.GetHeroAppearance` | Dungeon, frontend via services | Cosmetic codes chosen in the hero editor. |
+| `PlayerHeroService.GetCombatantSnapshot` | Combat | Immutable combat snapshot of a hero: class, statistics, abilities (`mana_cost`, `power`) and appearance. Formulas: `docs/player/combatant_snapshot.en.md`. Deleted hero: `NOT_FOUND`. |

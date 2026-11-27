@@ -10,6 +10,11 @@ service PlayerHeroService {
   // Reads the appearance a player chose in the hero editor. Called by Dungeon
   // when it loads a run, so a new appearance shows up on the next run.
   rpc GetHeroAppearance (GetHeroAppearanceRequest) returns (HeroAppearanceReply);
+
+  // Reads the immutable snapshot Combat needs to open a fight: identity, class,
+  // combat statistics, unlocked abilities and appearance. A deleted hero is
+  // NOT_FOUND here, because it can no longer fight.
+  rpc GetCombatantSnapshot (GetCombatantSnapshotRequest) returns (CombatantSnapshotReply);
 }
 
 message GetHeroAppearanceRequest {
@@ -30,4 +35,47 @@ message HeroAppearanceReply {
 
   // Hair color variant. Absent when the hero is bald.
   optional int32 hair_color = 4;
+}
+
+message GetCombatantSnapshotRequest {
+  // RFC 4122 textual UUID of the hero, owned by Player.
+  string hero_id = 1;
+}
+
+// Combat statistics are computed by Player; see docs/player/combatant_snapshot.en.md.
+message CombatantSnapshotReply {
+  string hero_id = 1;
+  string name = 2;
+
+  // Class code, for example "warrior", "shaman" or "mage".
+  string class_code = 3;
+  int32 level = 4;
+
+  // Player does not track hit points during a run: current values equal the maximum.
+  int32 current_hp = 5;
+  int32 max_hp = 6;
+  int32 current_mana = 7;
+  int32 max_mana = 8;
+  int32 attack = 9;
+  int32 defense = 10;
+  int32 speed = 11;
+
+  // Unlocked, active abilities ordered by code.
+  repeated CombatantAbility abilities = 12;
+
+  // Same cosmetic codes as GetHeroAppearance: consumers render them, never an image.
+  HeroAppearanceReply appearance = 13;
+}
+
+message CombatantAbility {
+  string code = 1;
+  string name = 2;
+  int32 mana_cost = 3;
+
+  // "SingleEnemy", "AllEnemies", "Self" or "SingleAlly".
+  string target_type = 4;
+
+  // Percentage of the caster's attack for an offensive ability, or of the target's
+  // maximum hit points for a healing one.
+  int32 power = 5;
 }
